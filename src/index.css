@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-red: #C8102E;
+  --color-brand-red-dark: #9E0C24;
+  --color-accent-yellow: #FFC72C;
+  --color-surface-base: #FAFAF7;
+  --color-surface-muted: #F0EFEA;
+  --color-surface-card: #FFFFFF;
+  --color-surface-dust: #E8E6DF;
+  --color-surface-dark: #1A1A1A;
+  --color-whatsapp: #25D366;
+  --color-text-primary: #1A1A1A;
+  --color-text-body: #2D2D2D;
+  --color-text-muted: #6B6B6B;
+  --color-text-inverse: #FFFFFF;
+  --color-border-default: #D6D2C8;
+  --color-divider-default: #D6D2C8;
+
+  --font-display: "Oswald", "Bebas Neue", "Anton", sans-serif;
+  --font-ui: "Inter", "Manrope", sans-serif;
+  --font-body: "Roboto", "Inter", sans-serif;
+
+  --shadow-industrial: rgba(0,0,0,0.16) 0px 3px 6px, rgba(0,0,0,0.23) 0px 3px 6px;
+  --shadow-lift: 0 12px 28px rgba(0,0,0,0.12);
+
+  --animate-scroll-left: scrollLeft 25s linear infinite;
+  --animate-float-bag: floatBag 4s ease-in-out infinite;
+
+  /* Strict Industrial Sharp corners overrides (0px radius) for all components */
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+}
+
+@layer base {
+  body {
+    background-color: #FAFAF7;
+    color: #2D2D2D;
+    font-family: 'Roboto', 'Inter', sans-serif;
+  }
+
+  /* Keyboard focus states outline styling - WCAG 2.2 AA */
+  :focus-visible {
+    outline: 2px solid #C8102E !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Custom Textures */
+.concrete-noise {
+  background-image: radial-gradient(rgba(26, 26, 26, 0.04) 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
+.blueprint-grid {
+  background-size: 30px 30px;
+  background-image: linear-gradient(to right, rgba(200, 198, 190, 0.25) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(200, 198, 190, 0.25) 1px, transparent 1px);
+}
+
+.diagonal-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #FFC72C,
+    #FFC72C 10px,
+    #1A1A1A 10px,
+    #1A1A1A 20px
+  );
+}
+
+/* Custom CSS Keyframes and Animation Utilities */
+@keyframes scrollLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes floatBag {
+  0%, 100% { transform: translateY(0) rotate(1deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+/* Scroll Fade Up Elements */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Round 3 Stitch and kinetic additions */
+.blueprint-pattern {
+  background-image: radial-gradient(rgba(0, 84, 104, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.hatch-pattern {
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(200, 16, 46, 0.05) 10px, rgba(200, 16, 46, 0.05) 11px);
+}
+
+@keyframes truckShake {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-0.5px) rotate(0.1deg); }
+  75% { transform: translateY(0.5px) rotate(-0.1deg); }
+}
