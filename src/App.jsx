@@ -75,7 +75,7 @@ const mapPins = [
 
 // Custom Accented Animated Inline Vector SVG Logo
 const Logo = ({ className = "h-11", light = false }) => (
-  <svg viewBox="0 0 320 65" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 320 65" className={`${className} shrink-0`} fill="none" xmlns="http://www.w3.org/2000/svg">
     <g className="animate-logo-group">
       {/* Hexagonal structural shield logo */}
       <path 
@@ -133,7 +133,7 @@ const BangurLogo = ({ className = "h-9", light = false }) => (
   <img 
     src={light ? "/01J7NRJT7YRX298Y1ARAJR5SF8.png" : "/01J7NR83P0AA7CQ6MXAK2J4JS1.png"} 
     alt="Bangur Cement Logo" 
-    className={className} 
+    className={`${className} shrink-0`} 
   />
 );
 
@@ -142,7 +142,7 @@ const ShreeCementLogo = ({ className = "h-9" }) => (
   <img 
     src="/01J7NRKPB4EMFN0M0EFRV8RD89.png" 
     alt="Shree Cement Logo" 
-    className={className} 
+    className={`${className} shrink-0`} 
   />
 );
 
@@ -663,34 +663,34 @@ export default function App() {
       {/* S2: Main Navigation */}
       <header className="sticky top-0 bg-white shadow-md z-40 border-b border-border-default">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-4">
-              <a href="#" onClick={() => setActiveView('home')} className="flex items-center outline-none">
-                <Logo className="h-11 object-contain" />
+          <div className="flex items-center justify-between h-20 gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <a href="#" onClick={() => setActiveView('home')} className="flex items-center outline-none shrink-0">
+                <Logo className="h-9 lg:h-11 object-contain" />
               </a>
-              <div className="hidden sm:flex items-center gap-3 border-l-2 border-border-default pl-4 h-10 select-none">
-                <BangurLogo className="h-8 object-contain" />
-                <div className="h-5 w-[1px] bg-border-default" />
-                <ShreeCementLogo className="h-8 object-contain" />
+              <div className="hidden sm:flex items-center gap-2 lg:gap-3 border-l-2 border-border-default pl-2 lg:pl-4 h-10 select-none shrink-0">
+                <BangurLogo className="h-6 lg:h-7 object-contain" />
+                <div className="h-5 w-[1px] bg-border-default shrink-0" />
+                <ShreeCementLogo className="h-6 lg:h-7 object-contain" />
               </div>
             </div>
             
-            <nav className="hidden lg:flex items-center gap-8 font-semibold text-sm">
-              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('about')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none">About Us</button>
-              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('products')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none">Bangur Range</button>
-              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('tech-support')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none">Tech Support</button>
-              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('process')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none">CFA Workflow</button>
-              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('enquiry')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none">Become Dealer</button>
-              <button onClick={() => setActiveView('contact-us')} className="hover:text-brand-red outline-none">Contact</button>
+            <nav className="hidden lg:flex items-center gap-4 xl:gap-8 font-semibold text-xs xl:text-sm shrink-0">
+              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('about')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none whitespace-nowrap">About Us</button>
+              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('products')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none whitespace-nowrap">Bangur Range</button>
+              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('tech-support')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none whitespace-nowrap">Tech Support</button>
+              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('process')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none whitespace-nowrap">CFA Workflow</button>
+              <button onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('enquiry')?.scrollIntoView(), 100); }} className="hover:text-brand-red outline-none whitespace-nowrap">Become Dealer</button>
+              <button onClick={() => setActiveView('contact-us')} className="hover:text-brand-red outline-none whitespace-nowrap">Contact</button>
             </nav>
 
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3 shrink-0">
               <a 
                 href="#enquiry"
-                className="bg-brand-red hover:bg-brand-red-dark text-white px-5 py-2.5 rounded-none font-semibold text-xs tracking-wider uppercase flex items-center gap-1.5 font-mono border-2 border-brand-red hover:-translate-y-0.5 transition-all"
+                className="bg-brand-red hover:bg-brand-red-dark text-white px-3 py-2 xl:px-5 xl:py-2.5 rounded-none font-semibold text-[10px] xl:text-xs tracking-wider uppercase flex items-center gap-1.5 font-mono border-2 border-brand-red hover:-translate-y-0.5 transition-all shrink-0"
               >
                 <span>Become Partner</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </a>
             </div>
 
