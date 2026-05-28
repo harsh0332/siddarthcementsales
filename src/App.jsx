@@ -969,7 +969,7 @@ export default function App() {
           </section>
 
           {/* E: Scroll delivery truck route timeline */}
-          <section className="py-20 bg-surface-base border-b border-border-default">
+          <section id="process" className="py-20 bg-surface-base border-b border-border-default scroll-mt-20">
             <div className="max-w-7xl mx-auto text-center space-y-8 px-4">
               <h3 className="font-display text-4xl font-black text-text-primary uppercase">DIRECT SUPPLY CHAIN LOGISTICS</h3>
               <p className="text-xs text-text-muted max-w-2xl mx-auto font-semibold uppercase text-brand-red">★ Fresh stock direct from Shree Cement plants with zero speculative middleman markup ★</p>
