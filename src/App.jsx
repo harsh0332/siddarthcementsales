@@ -885,11 +885,11 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[
-                  { name: 'Bangur Magna', tagline: 'The Premium Standard', img: IMAGES.magna, desc: 'Premium clinker blend engineered for high strength concrete RCC slabs, columns, and solid support structural beams.' },
-                  { name: 'Bangur Roofon Plus', tagline: 'The Concrete Master', img: IMAGES.roofon, desc: 'Specialized concrete compound engineered for residential roof slabs pouring, ceilings, and smooth structural finishing.' },
+                  { name: 'Bangur Magna', tagline: 'The Premium Standard', img: IMAGES.roofon, desc: 'Premium clinker blend engineered for high strength concrete RCC slabs, columns, and solid support structural beams.' },
+                  { name: 'Bangur Roofon Plus', tagline: 'The Concrete Master', img: IMAGES.magna, desc: 'Specialized concrete compound engineered for residential roof slabs pouring, ceilings, and smooth structural finishing.' },
                   { name: 'Bangur Shree Jungrodhak', tagline: 'Ghar ki Dhaal, Saalon Saal', img: IMAGES.jungrodhak, desc: 'Corrosion resistant formulation developed to protect internal rebar steel rebars from moisture dampness.' },
-                  { name: 'Bangur Powermax', tagline: 'Power Grind Technology', img: IMAGES.powermax, desc: 'Processed with advanced grinds to guarantee maximum setting hydration speeds and structural crack resistance.' },
-                  { name: 'Bangur Rockstrong', tagline: 'Rock-Like Strength', img: IMAGES.rockstrong, desc: 'Heavy load-bearing compound suited for heavy infrastructure bridges, commercial foundations, and industrial works.' },
+                  { name: 'Bangur Powermax', tagline: 'Power Grind Technology', img: IMAGES.rockstrong, desc: 'Processed with advanced grinds to guarantee maximum setting hydration speeds and structural crack resistance.' },
+                  { name: 'Bangur Rockstrong', tagline: 'Rock-Like Strength', img: IMAGES.powermax, desc: 'Heavy load-bearing compound suited for heavy infrastructure bridges, commercial foundations, and industrial works.' },
                   { name: 'Bangur White Marble', tagline: 'Finish That Lasts', img: IMAGES.marble, desc: 'Prinstine white cement blend suited for white marble joint grouting, tile sealing, and smooth custom works.' }
                 ].map((product, idx) => (
                   <div key={idx} className="bg-white border-2 border-border-default rounded-none flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-lift transition-all duration-300 hover:-translate-y-1 group">
@@ -1483,8 +1483,8 @@ export default function App() {
           <div className="lg:col-span-2 space-y-4 text-xs">
             <h4 className="font-display text-sm font-bold uppercase tracking-widest text-brand-red">Bangur Cement</h4>
             <ul className="space-y-2 text-gray-400 font-mono">
-              <li><button onClick={() => navigateToProduct('Bangur Magna', 'The Premium Standard', IMAGES.magna, 'Premium clinker RCC slab concrete')} className="hover:text-white outline-none">Bangur Magna</button></li>
-              <li><button onClick={() => navigateToProduct('Bangur Roofon Plus', 'The Concrete Master', IMAGES.roofon, 'Specialized roof pouring concrete')} className="hover:text-white outline-none">Bangur Roofon Plus</button></li>
+              <li><button onClick={() => navigateToProduct('Bangur Magna', 'The Premium Standard', IMAGES.roofon, 'Premium clinker RCC slab concrete')} className="hover:text-white outline-none">Bangur Magna</button></li>
+              <li><button onClick={() => navigateToProduct('Bangur Roofon Plus', 'The Concrete Master', IMAGES.magna, 'Specialized roof pouring concrete')} className="hover:text-white outline-none">Bangur Roofon Plus</button></li>
               <li><button onClick={() => navigateToProduct('Bangur Shree Jungrodhak', 'Ghar ki Dhaal', IMAGES.jungrodhak, 'Anti-rust steel protection concrete')} className="hover:text-white outline-none">Shree Jungrodhak</button></li>
             </ul>
           </div>
