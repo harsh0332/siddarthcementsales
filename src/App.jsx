@@ -128,29 +128,22 @@ const Logo = ({ className = "h-11", light = false }) => (
   </svg>
 );
 
-// Bangur Inline Brand logo
-const BangurLogo = ({ className = "h-9" }) => (
-  <svg viewBox="0 0 160 50" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="8" width="40" height="34" rx="4" fill="#C8102E" />
-    {/* Geometric shield icon */}
-    <path d="M 25 15 L 35 20 L 35 30 L 25 35 L 15 30 L 15 20 Z" fill="#FFC72C" />
-    <circle cx="25" cy="25" r="4" fill="#C8102E" />
-    {/* Text mark */}
-    <text x="54" y="27" fontFamily="Oswald, sans-serif" fontSize="20" fontWeight="900" fill="#C8102E" letterSpacing="0.5">BANGUR</text>
-    <text x="54" y="39" fontFamily="Inter, sans-serif" fontSize="8" fontWeight="800" fill="#1A1A1A" letterSpacing="2.5">CEMENT</text>
-  </svg>
+// Bangur Inline Brand logo (pointing to the real high-fidelity assets)
+const BangurLogo = ({ className = "h-9", light = false }) => (
+  <img 
+    src={light ? "/01J7NRJT7YRX298Y1ARAJR5SF8.png" : "/01J7NR83P0AA7CQ6MXAK2J4JS1.png"} 
+    alt="Bangur Cement Logo" 
+    className={className} 
+  />
 );
 
-// Shree Inline Brand logo
+// Shree Inline Brand logo (pointing to the real high-fidelity asset)
 const ShreeCementLogo = ({ className = "h-9" }) => (
-  <svg viewBox="0 0 160 50" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="8" width="40" height="34" rx="0" fill="#005468" />
-    {/* Geometric double arrow structural emblem */}
-    <path d="M 15 17 L 27 25 L 15 33 M 25 17 L 37 25 L 25 33" stroke="#FFD700" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    {/* Text mark */}
-    <text x="54" y="27" fontFamily="Oswald, sans-serif" fontSize="20" fontWeight="900" fill="#005468" letterSpacing="0.5">SHREE</text>
-    <text x="54" y="39" fontFamily="Inter, sans-serif" fontSize="8" fontWeight="800" fill="#1A1A1A" letterSpacing="2.5">CEMENT</text>
-  </svg>
+  <img 
+    src="/01J7NRKPB4EMFN0M0EFRV8RD89.png" 
+    alt="Shree Cement Logo" 
+    className={className} 
+  />
 );
 
 // Hook for scroll transitions
@@ -1464,7 +1457,7 @@ export default function App() {
               Siddharth Cement Sales (Est. 1973) is Guna district's Authorized Carrying & Forwarding Agent (CFA) representing Bangur Cement, a Shree Cement Ltd. brand. Factory-direct dispatches and clinker-fresh depot stocks.
             </p>
             <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-800/50">
-              <BangurLogo className="h-8 object-contain brightness-0 invert animate-[pulse_3s_infinite]" />
+              <BangurLogo light={true} className="h-8 object-contain animate-[pulse_3s_infinite]" />
               <div className="h-4 w-[1px] bg-gray-800" />
               <ShreeCementLogo className="h-8 object-contain brightness-0 invert animate-[pulse_3s_infinite]" />
             </div>
