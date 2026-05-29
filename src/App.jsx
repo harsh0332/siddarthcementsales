@@ -675,13 +675,6 @@ function HeroScrollScrub() {
         ) : (
           <canvas ref={canvasRef} className="w-full h-full block object-cover" />
         )}
-
-        {/* Subtle Bottom Scroll scrubbing guide indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/80 px-4 py-2 border border-gray-800 pointer-events-none select-none z-20">
-          <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wider flex items-center gap-2 animate-pulse justify-center font-mono">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-red animate-ping" /> Scroll Down to scrub 3D Animation
-          </p>
-        </div>
       </div>
     </div>
   );
