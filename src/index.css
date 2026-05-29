@@ -1,52 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-brand-red: #C8102E;
-  --color-brand-red-dark: #9E0C24;
-  --color-accent-yellow: #FFC72C;
-  --color-surface-base: #FAFAF7;
-  --color-surface-muted: #F0EFEA;
-  --color-surface-card: #FFFFFF;
-  --color-surface-dust: #E8E6DF;
-  --color-surface-dark: #1A1A1A;
-  --color-whatsapp: #25D366;
-  --color-text-primary: #1A1A1A;
-  --color-text-body: #2D2D2D;
-  --color-text-muted: #6B6B6B;
-  --color-text-inverse: #FFFFFF;
-  --color-border-default: #D6D2C8;
-  --color-divider-default: #D6D2C8;
+  /* Brand Corporate Colors */
+  --color-brand-red: #c8102e;
+  --color-brand-red-dark: #9e0c24;
+  --color-accent-yellow: #ffc72c;
+  --color-surface-base: #fafaf7;
+  --color-surface-muted: #f0efea;
+  --color-surface-dust: #e8e6df;
+  --color-surface-card: #ffffff;
+  --color-surface-dark: #1a1a1a;
+  --color-surface-strong: #989c8e;
+  --color-whatsapp: #25d366;
+  --color-text-primary: #212529;
+  --color-text-body: #212529;
+  --color-text-muted: #6c757d;
+  --color-text-inverse: #2c338c;
+  --color-text-tertiary: #ffffff;
+  --color-border-default: #e0e0e0;
+  --color-divider-default: #e0e0e0;
 
-  --font-display: "Oswald", "Bebas Neue", "Anton", sans-serif;
-  --font-ui: "Inter", "Manrope", sans-serif;
-  --font-body: "Roboto", "Inter", sans-serif;
+  /* Typography Fonts stack */
+  --font-display: 'Roboto', sans-serif;
+  --font-ui: 'Roboto', sans-serif;
+  --font-body: 'Roboto', sans-serif;
 
-  --shadow-industrial: rgba(0,0,0,0.16) 0px 3px 6px, rgba(0,0,0,0.23) 0px 3px 6px;
-  --shadow-lift: 0 12px 28px rgba(0,0,0,0.12);
+  /* Spacing Scale Guidelines */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 5px;
+  --space-4: 6px;
+  --space-5: 7px;
+  --space-6: 8px;
+  --space-7: 9px;
+  --space-8: 10px;
+
+  /* Brand Radius Tokens */
+  --radius-xs: 6px;
+  --radius-sm: 19px;
+  --radius-md: 20px;
+  --radius-lg: 26px;
+  --radius-xl: 50px;
+  --radius-2xl: 64px;
+
+  --shadow-industrial: rgba(0, 0, 0, 0.16) 0px 3px 6px 0px, rgba(0, 0, 0, 0.23) 0px 3px 6px 0px;
+  --shadow-lift: 0 12px 28px rgba(0, 0, 0, 0.12);
 
   --animate-scroll-left: scrollLeft 25s linear infinite;
   --animate-float-bag: floatBag 4s ease-in-out infinite;
-
-  /* Strict Industrial Sharp corners overrides (0px radius) for all components */
-  --radius: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
 }
 
 @layer base {
   body {
-    background-color: #FAFAF7;
-    color: #2D2D2D;
-    font-family: 'Roboto', 'Inter', sans-serif;
+    background-color: #fafaf7;
+    color: #212529;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
   }
 
   /* Keyboard focus states outline styling - WCAG 2.2 AA */
   :focus-visible {
-    outline: 2px solid #C8102E !important;
+    outline: 2px solid #c8102e !important;
     outline-offset: 2px !important;
   }
 }
@@ -111,3 +128,9 @@
   25% { transform: translateY(-0.5px) rotate(0.1deg); }
   75% { transform: translateY(0.5px) rotate(-0.1deg); }
 }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
