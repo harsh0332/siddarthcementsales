@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -22,9 +21,9 @@
   --color-divider-default: #e0e0e0;
 
   /* Typography Fonts stack */
-  --font-display: 'Roboto', sans-serif;
-  --font-ui: 'Roboto', sans-serif;
-  --font-body: 'Roboto', sans-serif;
+  --font-display: 'Oswald', 'Roboto', sans-serif;
+  --font-ui: 'Inter', 'Roboto', sans-serif;
+  --font-body: 'Roboto', 'Inter', sans-serif;
 
   /* Spacing Scale Guidelines */
   --space-1: 2px;
@@ -132,5 +131,123 @@
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Visible Premium Polish Overhaul */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c8102e, #ff5a3c, #ffc72c);
+  z-index: 60;
+  transition: width 80ms linear;
+}
+
+@keyframes heroFade {
+  0%, 25% { opacity: 1; z-index: 10; }
+  33.33%, 91.67% { opacity: 0; z-index: 0; }
+  100% { opacity: 1; z-index: 10; }
+}
+
+@keyframes heroZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+.hero-slide {
+  animation: heroFade 18s infinite, heroZoom 18s ease-out infinite;
+}
+
+@keyframes heroRise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-rise {
+  opacity: 0;
+  animation: heroRise 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-rise-1 { animation-delay: 0.05s; }
+.hero-rise-2 { animation-delay: 0.18s; }
+.hero-rise-3 { animation-delay: 0.31s; }
+.hero-rise-4 { animation-delay: 0.44s; }
+
+@keyframes underlineSweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.title-sweep {
+  background: linear-gradient(90deg, #c8102e, #ff5a3c, #ffc72c, #c8102e);
+  background-size: 200% auto;
+  animation: underlineSweep 4s linear infinite;
+}
+
+.premium-card {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -12px rgba(26, 26, 26, 0.28);
+  border-color: rgba(200, 16, 46, 0.4);
+}
+
+@keyframes badgePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(200, 16, 46, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(200, 16, 46, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(200, 16, 46, 0);
+  }
+}
+
+.badge-pulse {
+  animation: badgePulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.font-display {
+  letter-spacing: -0.01em;
+}
+
+/* Prefers Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .hero-rise {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .title-sweep {
+    animation: none !important;
+    background-size: 100% auto !important;
+  }
+  .premium-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: inherit !important;
+  }
+  .badge-pulse {
+    animation: none !important;
+    box-shadow: none !important;
+  }
 }
 

@@ -38,32 +38,53 @@ import {
 } from 'lucide-react';
 
 
+// Global Constants for contact information
+const PHONE = '+919893156560';
+const WHATSAPP = '919893156560';
+
+// Safely track events using gtag, Facebook pixel, or GTM dataLayer
+const trackEvent = (name, params = {}) => {
+  try {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', name, params);
+    }
+    if (typeof window.fbq === 'function') {
+      window.fbq('trackCustom', name, params);
+    }
+    if (window.dataLayer && typeof window.dataLayer.push === 'function') {
+      window.dataLayer.push({ event: name, ...params });
+    }
+  } catch (err) {
+    // no-op if blocked
+  }
+};
+
 // Brand tokens & correct cement-bag static assets
 const IMAGES = {
-  heroBg: '/01JP1W9X0MFN9K72YR09G16DAM.jpg',         // Construction golden hour
+  heroBg: '/01JP1W9X0MFN9K72YR09G16DAM.webp',         // Construction golden hour
   sealOfQuality: '/01J7NRJT7YRX298Y1ARAJR5SF8.png',   // Bangur official seal
   
   // Generated high-fidelity section assets
-  vintageShop: '/vintage_shop_1973.png',              // Vintage shop (Siddarth Sales)
-  oldStorefrontBags: '/old_storefront_bags_new.png',  // Storefront with bags stacked
-  vintageDelivery: '/vintage_delivery.png',          // Retro transport truck
-  durabilityRebar: '/durability_rebar.png',          // Concrete structural steel rebar
+  vintageShop: '/vintage_shop_1973.webp',              // Vintage shop (Siddarth Sales)
+  oldStorefrontBags: '/old_storefront_bags_new.webp',  // Storefront with bags stacked
+  vintageDelivery: '/vintage_delivery.webp',          // Retro transport truck
+  durabilityRebar: '/durability_rebar.webp',          // Concrete structural steel rebar
   
   // Newly added assets for Round 3 Revisions
-  shriGanesh: '/shri_ganesh_new.png',
-  vintageMaterialsShop: '/vintage_materials_shop_new.png',
-  modernMaterialsShop: '/modern_materials_shop_new.png',
-  cementWarehouse: '/cement_warehouse.png',
-  opcSpeed: '/opc_speed.png',
-  ppcDurability: '/ppc_durability.png',
-  testingVan: '/testing_van.png',
-  rebarScan: '/rebar_scan.png',
-  cubeCrusher: '/cube_crusher.png',
+  shriGanesh: '/shri_ganesh_new.webp',
+  vintageMaterialsShop: '/vintage_materials_shop_new.webp',
+  modernMaterialsShop: '/modern_materials_shop_new.webp',
+  cementWarehouse: '/cement_warehouse.webp',
+  opcSpeed: '/opc_speed.webp',
+  ppcDurability: '/ppc_durability.webp',
+  testingVan: '/testing_van.webp',
+  rebarScan: '/rebar_scan.webp',
+  cubeCrusher: '/cube_crusher.webp',
   
   // Guide thumbnail generated images
-  guideOpcPpc: '/guide_opc_ppc.png',
-  guideGrades: '/guide_grades.png',
-  guideStorage: '/guide_storage.png',
+  guideOpcPpc: '/guide_opc_ppc.webp',
+  guideGrades: '/guide_grades.webp',
+  guideStorage: '/guide_storage.webp',
 
   // Correct product cards assignments matching your prompt instructions
   magna: '/01JMFEBNCEBP13REHNWG2NDY7W (1).png',       // Bangur Magna bag photo (Magna bag)
@@ -477,20 +498,22 @@ const Logo = ({ light = false, hideSub = false }) => (
 );
 
 // Bangur Inline Brand logo (pointing to the real high-fidelity assets)
-const BangurLogo = ({ className = "h-9", light = false }) => (
+const BangurLogo = ({ className = "h-9", light = false, ...props }) => (
   <img 
     src={light ? "/01J7NRJT7YRX298Y1ARAJR5SF8.png" : "/01J7NR83P0AA7CQ6MXAK2J4JS1.png"} 
     alt="Bangur Cement Logo" 
     className={`${className} shrink-0`} 
+    {...props}
   />
 );
 
 // Shree Inline Brand logo (pointing to the real high-fidelity asset)
-const ShreeCementLogo = ({ className = "h-9" }) => (
+const ShreeCementLogo = ({ className = "h-9", ...props }) => (
   <img 
     src="/01J7NRKPB4EMFN0M0EFRV8RD89.png" 
     alt="Shree Cement Logo" 
     className={`${className} shrink-0`} 
+    {...props}
   />
 );
 
@@ -558,49 +581,41 @@ function StatCounter({ target, suffix = '', duration = 1800 }) {
 function HeroScrollScrub() {
   const canvasRef = useRef(null);
   const parentRef = useRef(null);
-  const [images, setImages] = useState([]);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [prefersReduced, setPrefersReduced] = useState(false);
-  const frameCount = 240;
+  const imagesRef = useRef([]);
+  const [isDesktop, setIsDesktop] = useState(null);
+  const [canvasReady, setCanvasReady] = useState(false);
+  const frameCount = 120;
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReduced(mq.matches);
-    const handler = (e) => setPrefersReduced(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    const mobileMq = window.matchMedia('(max-width: 767px)');
+    const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    const checkViewport = () => {
+      const isMobile = mobileMq.matches;
+      const prefersReduced = motionMq.matches;
+      setIsDesktop(!isMobile && !prefersReduced);
+    };
+
+    checkViewport();
+    
+    mobileMq.addEventListener('change', checkViewport);
+    motionMq.addEventListener('change', checkViewport);
+    return () => {
+      mobileMq.removeEventListener('change', checkViewport);
+      motionMq.removeEventListener('change', checkViewport);
+    };
   }, []);
 
-  // Preloading 240 Frames
   useEffect(() => {
-    if (prefersReduced) return;
-    let loadedCount = 0;
-    const loadedImages = [];
-    for (let i = 1; i <= frameCount; i++) {
-      const img = new Image();
-      const frameStr = String(i).padStart(3, '0');
-      img.src = `/ezgif/ezgif-frame-${frameStr}.jpg`;
-      img.onload = () => {
-        loadedImages[i] = img;
-        loadedCount++;
-        setLoadingProgress(Math.round((loadedCount / frameCount) * 100));
-        if (loadedCount === frameCount) setImages(loadedImages);
-      };
-      img.onerror = () => {
-        loadedCount++;
-        setLoadingProgress(Math.round((loadedCount / frameCount) * 100));
-      };
-    }
-  }, [prefersReduced]);
+    if (isDesktop === false || isDesktop === null) return;
 
-  useEffect(() => {
-    if (prefersReduced || images.length === 0) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext('2d');
+    if (!context) return;
 
     const drawFrame = (index) => {
-      const img = images[index];
+      const img = imagesRef.current[index];
       if (!img) return;
 
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -623,19 +638,32 @@ function HeroScrollScrub() {
     };
 
     const handleResize = () => {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      drawFrame(1);
+      const parent = parentRef.current;
+      if (!parent || !canvas) return;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = parent.clientWidth * ratio;
+      canvas.height = parent.clientHeight * ratio;
+      
+      // Redraw current frame on resize
+      const rect = parent.getBoundingClientRect();
+      const scrollHeight = rect.height - window.innerHeight;
+      const scrolled = -rect.top;
+      const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
+      const frameIndex = Math.min(
+        frameCount - 1,
+        Math.floor(progress * (frameCount - 1)) + 1
+      );
+      drawFrame(frameIndex);
     };
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
+    let animationFrameId = null;
 
     const handleScroll = () => {
       const parent = parentRef.current;
-      if (!parent) return;
+      if (!parent || !canvas) return;
+
       const rect = parent.getBoundingClientRect();
-      const scrollHeight = parent.scrollHeight - window.innerHeight;
+      const scrollHeight = rect.height - window.innerHeight;
       const scrolled = -rect.top;
       const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
       
@@ -643,38 +671,150 @@ function HeroScrollScrub() {
         frameCount - 1,
         Math.floor(progress * (frameCount - 1)) + 1
       );
-      requestAnimationFrame(() => drawFrame(frameIndex));
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      animationFrameId = requestAnimationFrame(() => {
+        drawFrame(frameIndex);
+      });
     };
 
+    // Preload
+    const loadedImages = [];
+    setCanvasReady(false);
+
+    const img1 = new Image();
+    img1.src = `/ezgif/ezgif-frame-001.jpg`;
+    img1.onload = () => {
+      loadedImages[1] = img1;
+      imagesRef.current[1] = img1;
+      setCanvasReady(true);
+      
+      handleResize(); // Initialize size and draw frame 1
+      
+      // Preload remaining frames
+      for (let i = 2; i <= frameCount; i++) {
+        const img = new Image();
+        const frameStr = String(i).padStart(3, '0');
+        img.src = `/ezgif/ezgif-frame-${frameStr}.jpg`;
+        img.onload = () => {
+          loadedImages[i] = img;
+          imagesRef.current[i] = img;
+          
+          // If this is currently the active frame, redraw it
+          const rect = parentRef.current?.getBoundingClientRect();
+          if (rect) {
+            const scrollHeight = rect.height - window.innerHeight;
+            const scrolled = -rect.top;
+            const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
+            const currentFrameIndex = Math.min(
+              frameCount - 1,
+              Math.floor(progress * (frameCount - 1)) + 1
+            );
+            if (currentFrameIndex === i) {
+              drawFrame(i);
+            }
+          }
+        };
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
 
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
-  }, [images, prefersReduced]);
+  }, [isDesktop]);
 
+  // Loading state placeholder before media query mount
+  if (isDesktop === null) {
+    return (
+      <div className="relative w-full h-[68vh] min-h-[420px] max-h-[640px] bg-surface-dark overflow-hidden border-b border-border-default flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Mobile Branch Slideshow
+  if (isDesktop === false) {
+    return (
+      <div className="relative w-full h-[68vh] min-h-[420px] max-h-[640px] bg-surface-dark overflow-hidden border-b border-border-default">
+        {/* Slideshow Accent Line */}
+        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-brand-red via-accent-yellow to-brand-red z-30" />
+        
+        {/* 3 stacked slides */}
+        <img 
+          src={IMAGES.modernMaterialsShop} 
+          alt="Modern storefront bags" 
+          className="hero-slide absolute inset-0 w-full h-full object-cover opacity-100" 
+          style={{ animationDelay: '0s' }}
+          fetchPriority="high"
+        />
+        <img 
+          src={IMAGES.cementWarehouse} 
+          alt="Cement warehouse" 
+          className="hero-slide absolute inset-0 w-full h-full object-cover opacity-0" 
+          style={{ animationDelay: '-6s' }}
+          loading="lazy"
+          decoding="async"
+        />
+        <img 
+          src={IMAGES.oldStorefrontBags} 
+          alt="Old storefront bags stack" 
+          className="hero-slide absolute inset-0 w-full h-full object-cover opacity-0" 
+          style={{ animationDelay: '-12s' }}
+          loading="lazy"
+          decoding="async"
+        />
+
+        {/* Overlay content */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40 z-20 flex flex-col justify-center items-center text-center p-6 select-none">
+          <div className="space-y-6 max-w-xl">
+            {/* Pulsing accreditation stamp */}
+            <div className="inline-flex items-center gap-2 text-brand-red font-mono font-bold uppercase tracking-widest text-[9px] sm:text-xs bg-black/40 backdrop-blur-xs px-3.5 py-1.5 border border-brand-red/30 shadow-md rounded-xs animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-brand-red animate-ping" />
+              <span>Authorized Bangur CFA · Guna</span>
+            </div>
+
+            {/* Overlaid Headline */}
+            <h2 className="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight leading-tight">
+              Building Solid Foundations <span className="block text-brand-red">Since 1973</span>
+            </h2>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes heroCrossFade {
+            0%, 25% { opacity: 1; z-index: 10; }
+            33.33%, 91.67% { opacity: 0; z-index: 0; }
+            100% { opacity: 1; z-index: 10; }
+          }
+          .hero-slide {
+            animation: heroCrossFade 18s infinite;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Desktop Branch Canvas Scroll scrub
   return (
-    <div ref={parentRef} className="relative w-full h-[300vh] bg-surface-dark z-10 border-b border-border-default">
+    <div ref={parentRef} className="relative w-full h-[220vh] bg-surface-dark z-10 border-b border-border-default">
       {/* 16:9 Sticky Container pinning screen */}
       <div className="sticky top-20 h-[calc(100vh-80px)] w-full overflow-hidden flex items-center justify-center">
-        {loadingProgress < 100 && !prefersReduced && (
-          <div className="absolute inset-0 bg-[#121212] flex flex-col items-center justify-center z-30 text-white space-y-4">
-            <div className="w-10 h-10 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
-            <p className="font-display uppercase tracking-widest text-[9px] font-bold text-gray-400">Preloading Apple Scroll Scrub ({loadingProgress}%)</p>
+        {!canvasReady && (
+          <div className="absolute inset-0 bg-[#121212] flex items-center justify-center z-30">
+            <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
           </div>
         )}
-        
-        {prefersReduced ? (
-          <img 
-            src={IMAGES.heroBg} 
-            alt="Static building cement under construction" 
-            className="w-full h-full object-cover" 
-          />
-        ) : (
-          <canvas ref={canvasRef} className="w-full h-full block object-cover" />
-        )}
+        <canvas ref={canvasRef} className="w-full h-full block object-cover" />
       </div>
     </div>
   );
@@ -802,6 +942,35 @@ function ScrollDeliveryTimeline() {
       </div>
 
     </div>
+  );
+}
+
+// G: Scroll progress indicator component at the very top of the screen
+function ScrollProgress() {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+      const totalScroll = scrollHeight - clientHeight;
+      const percentage = totalScroll > 0 ? (scrollTop / totalScroll) * 100 : 0;
+      setWidth(percentage);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initialize on mount
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div 
+      className="scroll-progress" 
+      style={{ width: `${width}%` }}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -938,6 +1107,11 @@ export default function App() {
 
   const submitToFormAction = (e) => {
     e.preventDefault();
+    trackEvent('lead_submit', {
+      enquiry_type: formData.enquiryType,
+      city: formData.city,
+      volume: formData.monthlyRequirement
+    });
     setFormSubmitted(true);
   };
 
@@ -989,7 +1163,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-base text-text-body font-body antialiased">
+    <div className="min-h-screen bg-surface-base text-text-body font-body antialiased pb-[58px] md:pb-0">
+      <ScrollProgress />
       
       {/* S1: Top Utility Bar */}
       <div className="w-full bg-surface-dark py-2 px-4 text-xs text-white flex flex-col md:flex-row justify-between items-center z-50 relative border-b border-gray-800">
@@ -1000,12 +1175,22 @@ export default function App() {
           <span className="text-gray-300">Guna District, MP (Est. 1973)</span>
         </div>
         <div className="flex items-center gap-4 mt-1 md:mt-0">
-          <a href="tel:+919893156560" className="flex items-center gap-1.5 hover:text-brand-red font-semibold">
+          <a 
+            href={`tel:${PHONE}`} 
+            onClick={() => trackEvent('call_click', {location:'top_bar'})}
+            className="flex items-center gap-1.5 hover:text-brand-red font-semibold"
+          >
             <Phone className="w-3.5 h-3.5 text-brand-red" />
             <span>+91 98931 56560</span>
           </a>
           <span className="text-gray-600">|</span>
-          <a href="https://wa.me/919893156560" className="flex items-center gap-1.5 text-whatsapp font-semibold">
+          <a 
+            href={`https://wa.me/${WHATSAPP}`} 
+            onClick={() => trackEvent('whatsapp_click', {location:'top_bar'})}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-whatsapp font-semibold"
+          >
             <MessageCircle className="w-3.5 h-3.5" />
             <span>WhatsApp CFA</span>
           </a>
@@ -1137,29 +1322,29 @@ export default function App() {
 
             <div className="max-w-5xl mx-auto px-4 text-center space-y-10 relative z-10">
               {/* Monospaced CFA Accreditation Stamp */}
-              <div className="inline-flex items-center gap-2.5 text-brand-red font-mono font-bold uppercase tracking-widest text-[10px] sm:text-xs bg-brand-red/5 px-4 py-2 border-2 border-brand-red/10 shadow-sm rounded-xs select-none animate-pulse">
+              <div className="inline-flex items-center gap-2.5 text-brand-red font-mono font-bold uppercase tracking-widest text-[10px] sm:text-xs bg-brand-red/5 px-4 py-2 border-2 border-brand-red/10 shadow-sm rounded-xs select-none hero-rise hero-rise-1 badge-pulse">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand-red animate-ping" />
                 <span>★ ACCREDITED CARRYING & FORWARDING AGENT (CFA)</span>
               </div>
               
               <div className="space-y-6">
                 {/* Heavy Industrial Concrete Title Box */}
-                <div className="block sm:inline-block max-w-full bg-gradient-to-r from-white via-[#F4F4F0] to-white border-2 border-border-default border-l-[10px] border-l-brand-red px-6 py-4 sm:px-10 sm:py-6 shadow-md hover:shadow-lift hover:-translate-y-0.5 transition-all duration-300 rounded-lg select-none">
+                <div className="block sm:inline-block max-w-full bg-gradient-to-r from-white via-[#F4F4F0] to-white border-2 border-border-default border-l-[10px] border-l-brand-red px-6 py-4 sm:px-10 sm:py-6 shadow-md rounded-lg select-none hero-rise hero-rise-2 premium-card">
                   <h1 className="font-display text-[24px] min-[360px]:text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#1A1A1A] uppercase tracking-tighter leading-none m-0 relative">
                     SIDDHARTH <span className="text-brand-red relative inline-block">CEMENT SALES
-                      <span className="absolute bottom-[-4px] left-0 w-full h-[3px] bg-brand-red/10 rounded-full" />
+                      <span className="absolute bottom-[-4px] left-0 w-full h-[3px] rounded-full title-sweep" />
                     </span>
                   </h1>
                 </div>
 
                 {/* Subheading with ESTD. 1973 glowing element */}
-                <h2 className="font-display text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[#333333] uppercase tracking-tight leading-tight pt-2 flex items-center justify-center gap-2 flex-wrap">
+                <h2 className="font-display text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[#333333] uppercase tracking-tight leading-tight pt-2 flex items-center justify-center gap-2 flex-wrap hero-rise hero-rise-3">
                   <span>BUILDING SOLID FOUNDATIONS</span>
                   <span className="text-brand-red font-mono text-xs sm:text-sm border-2 border-brand-red/20 px-2.5 py-0.5 rounded bg-brand-red/5 select-none shrink-0 font-bold tracking-widest animate-pulse">ESTD. 1973</span>
                 </h2>
               </div>
               
-              <p className="text-text-body text-sm sm:text-base md:text-lg max-w-3xl mx-auto font-body leading-relaxed text-[#444444] border-l-2 border-border-default pl-4 md:pl-6 text-left md:text-center italic">
+              <p className="text-text-body text-sm sm:text-base md:text-lg max-w-3xl mx-auto font-body leading-relaxed text-[#444444] border-l-2 border-border-default pl-4 md:pl-6 text-left md:text-center italic hero-rise hero-rise-4">
                 Direct from <span className="font-bold text-brand-red">Shree Cement Ltd.</span> — India's 3rd largest cement producer. Authorized Guna CFA delivering factory-fresh OPC and PPC concrete formulations directly to your site with zero speculative markups.
               </p>
 
@@ -1276,6 +1461,8 @@ export default function App() {
                             className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover/deck:scale-103 ${
                               isActive ? 'grayscale-0' : 'grayscale contrast-125 brightness-95'
                             }`} 
+                            loading="lazy"
+                            decoding="async"
                           />
                           <span className="absolute top-3 left-3 bg-brand-red text-white text-[8px] font-mono font-black uppercase px-2.5 py-0.5 rounded-xs shadow-sm select-none">
                             {card.badge}
@@ -1464,15 +1651,15 @@ export default function App() {
                   { name: 'Bangur Rockstrong', tagline: 'Rock-Like Strength', img: IMAGES.rockstrong, desc: 'Heavy load-bearing compound suited for heavy infrastructure bridges, commercial foundations, and industrial works.', categories: ['OPC', 'PSC'] },
                   { name: 'Bangur White Marble', tagline: 'Finish That Lasts', img: IMAGES.marble, desc: 'Prinstine white cement blend suited for white marble joint grouting, tile sealing, and smooth custom plaster works.', categories: ['Non-Trade'] }
                 ].filter(product => activeCategoryFilter === 'All' || product.categories.includes(activeCategoryFilter)).map((product, idx) => (
-                  <div key={idx} className="bg-white border-2 border-border-default rounded-lg flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-lift transition-all duration-300 hover:-translate-y-1 group">
+                  <div key={idx} className="bg-white border-2 border-border-default rounded-lg flex flex-col justify-between overflow-hidden shadow-sm premium-card group">
                     <div className="p-6 pb-2 text-left">
                       <span className="text-[10px] bg-brand-red/10 text-brand-red px-2 py-0.5 rounded-xs font-bold uppercase tracking-wider font-mono">BIS Compliant</span>
-                      <h3 className="font-display text-2xl font-bold uppercase text-text-primary mt-2">{product.name}</h3>
+                      <h3 className="font-display text-2xl font-bold uppercase tracking-wide text-text-primary mt-2">{product.name}</h3>
                       <p className="text-xs text-brand-red italic font-semibold mt-0.5">"{product.tagline}"</p>
                       <p className="text-xs text-text-muted mt-3 line-clamp-2">{product.desc}</p>
                     </div>
                     <div className="h-52 flex items-center justify-center p-4">
-                      <img src={product.img} alt={product.name} className="h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                      <img src={product.img} alt={product.name} className="h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     </div>
                     <div className="p-6 pt-2 space-y-4">
                       <div className="flex gap-2 border-t border-border-default pt-4">
@@ -1534,6 +1721,8 @@ export default function App() {
                       src={selectedCementType === 'OPC' ? IMAGES.opcSpeed : IMAGES.ppcDurability} 
                       alt={selectedCementType} 
                       className="w-full h-full object-cover rounded-md group-hover:scale-102 transition-transform duration-700 select-none animate-[pulse_6s_infinite]" 
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute bottom-4 left-4 bg-surface-dark/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-md text-[10px] uppercase font-mono tracking-widest select-none border border-gray-700/50">
                       ★ Active: {selectedCementType} Visual rendering
@@ -1609,6 +1798,8 @@ export default function App() {
                       src={IMAGES.testingVan} 
                       alt="On-Site Testing Van" 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute top-4 right-4 bg-surface-muted/95 backdrop-blur-sm text-[10px] font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-xs text-text-muted border border-border-default uppercase select-none">
                       SERVICE 01
@@ -1646,6 +1837,8 @@ export default function App() {
                       src={IMAGES.rebarScan} 
                       alt="Rebar Cover Scan" 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute top-4 right-4 bg-surface-muted/95 backdrop-blur-sm text-[10px] font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-xs text-text-muted border border-border-default uppercase select-none">
                       SERVICE 02
@@ -1683,6 +1876,8 @@ export default function App() {
                       src={IMAGES.cubeCrusher} 
                       alt="Lab Cube Crusher" 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute top-4 right-4 bg-surface-muted/95 backdrop-blur-sm text-[10px] font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-xs text-text-muted border border-border-default uppercase select-none">
                       SERVICE 03
@@ -1737,7 +1932,7 @@ export default function App() {
                 ].map((blog, idx) => (
                   <div key={idx} className="bg-white rounded-lg border border-border-default overflow-hidden flex flex-col justify-between h-full group hover:shadow-lift transition-shadow duration-300">
                     <div className="aspect-[16/9] w-full bg-surface-dust relative overflow-hidden">
-                      <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                     </div>
                     <div className="p-6 flex-grow flex flex-col justify-between text-left space-y-4">
                       <div>
@@ -2036,6 +2231,7 @@ export default function App() {
                         href={getWhatsAppURL()} 
                         target="_blank" 
                         rel="noopener noreferrer" 
+                        onClick={() => trackEvent('whatsapp_click', {location:'enquiry_form'})}
                         className="bg-whatsapp hover:bg-green-600 text-white py-3.5 rounded-md font-semibold text-xs tracking-wider uppercase text-center transition-colors font-mono flex items-center justify-center gap-1.5"
                       >
                         <MessageCircle className="w-4 h-4" />
@@ -2066,7 +2262,7 @@ export default function App() {
                   <p className="text-sm italic text-text-body font-medium leading-relaxed font-body">"{feedbackList[carouselIndex].quote}"</p>
                 </div>
                 <div className="flex items-center gap-3 pt-6 border-t border-border-default mt-6">
-                  <img src={feedbackList[carouselIndex].avatar} alt={feedbackList[carouselIndex].name} className="w-12 h-12 rounded-full object-cover" />
+                  <img src={feedbackList[carouselIndex].avatar} alt={feedbackList[carouselIndex].name} className="w-12 h-12 rounded-full object-cover" loading="lazy" decoding="async" />
                   <div>
                     <h4 className="font-display text-base font-bold uppercase text-text-primary leading-tight">{feedbackList[carouselIndex].name}</h4>
                     <p className="text-[10px] text-text-muted font-bold uppercase">{feedbackList[carouselIndex].role} · <span className="text-brand-red">{feedbackList[carouselIndex].location}</span></p>
@@ -2267,7 +2463,7 @@ export default function App() {
           
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center bg-white p-8 rounded-lg border border-border-default shadow-lift">
             <div className="md:col-span-5 flex justify-center">
-              <img src={selectedProductData.img} alt={selectedProductData.name} className="h-[350px] object-contain" />
+              <img src={selectedProductData.img} alt={selectedProductData.name} className="h-[350px] object-contain" loading="lazy" decoding="async" />
             </div>
             <div className="md:col-span-7 space-y-6">
               <span className="text-[10px] bg-brand-red/10 text-brand-red px-2 py-0.5 rounded-xs font-bold uppercase tracking-wider">Authorized Guna CFA</span>
@@ -2326,7 +2522,7 @@ export default function App() {
             </div>
 
             <div className="aspect-[16/9] w-full bg-surface-dust rounded-lg overflow-hidden border border-border-default shadow-sm relative group">
-              <img src={selectedBlogData.img} alt={selectedBlogData.title} className="w-full h-full object-cover group-hover:scale-101 transition-transform duration-700" />
+              <img src={selectedBlogData.img} alt={selectedBlogData.title} className="w-full h-full object-cover group-hover:scale-101 transition-transform duration-700" loading="lazy" decoding="async" />
             </div>
 
             {/* Structured Content Area */}
@@ -2523,9 +2719,9 @@ export default function App() {
               Siddharth Cement Sales (Est. 1973) is Guna district's Authorized Carrying & Forwarding Agent (CFA) representing Bangur Cement, a Shree Cement Ltd. brand. Factory-direct dispatches and clinker-fresh depot stocks.
             </p>
             <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-800/50">
-              <BangurLogo light={true} className="h-8 object-contain animate-[pulse_3s_infinite]" />
+              <BangurLogo light={true} className="h-8 object-contain animate-[pulse_3s_infinite]" loading="lazy" decoding="async" />
               <div className="h-4 w-[1px] bg-gray-800" />
-              <ShreeCementLogo className="h-8 object-contain brightness-0 invert animate-[pulse_3s_infinite]" />
+              <ShreeCementLogo className="h-8 object-contain brightness-0 invert animate-[pulse_3s_infinite]" loading="lazy" decoding="async" />
             </div>
           </div>
 
@@ -2561,22 +2757,50 @@ export default function App() {
         <div className="max-w-7xl mx-auto border-t border-gray-800 my-6" />
 
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-500">
-          <p>© 2025 Siddharth Cement Sales. All rights reserved. Carrying & Forwarding Agent.</p>
+          <p>© {new Date().getFullYear()} Siddharth Cement Sales. All rights reserved. Carrying & Forwarding Agent.</p>
           <p>Shree Cement Ltd founded 1979, capacity 46.4 MTPA. Slogans and packaging remain copyright property Shree Cement Ltd.</p>
         </div>
       </footer>
 
       {/* Persistent Floating WhatsApp badge */}
       <a
-        href="https://wa.me/919893156560?text=Hi%2C%20I%20have%20reviewed%20your%20website%20and%20want%20to%20request%20CFA%20cement%20pricing."
+        href={`https://wa.me/${WHATSAPP}?text=Hi%2C%20I%20have%20reviewed%20your%20website%20and%20want%20to%20request%20CFA%20cement%20pricing.`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-whatsapp text-white flex items-center justify-center shadow-2xl z-50 hover:bg-green-600 transition-all focus:outline-none focus:ring-4 focus:ring-whatsapp/20"
+        onClick={() => trackEvent('whatsapp_click', {location:'desktop_float'})}
+        className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-whatsapp text-white hidden md:flex items-center justify-center shadow-2xl z-50 hover:bg-green-600 transition-all focus:outline-none focus:ring-4 focus:ring-whatsapp/20"
         title="Chat on WhatsApp direct"
       >
         <span className="absolute inset-0 w-full h-full bg-whatsapp rounded-full animate-ping opacity-25" />
         <MessageCircle className="w-8 h-8 fill-current" />
       </a>
+
+      {/* Mobile-only Sticky Action Bar */}
+      <div 
+        className="md:hidden fixed bottom-0 inset-x-0 z-50 grid grid-cols-2 bg-surface-dark/95 backdrop-blur-sm border-t border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.25)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <a 
+          href={`tel:${PHONE}`} 
+          onClick={() => trackEvent('call_click', {location:'mobile_bar'})}
+          className="flex items-center justify-center gap-2 py-3.5 text-white hover:text-brand-red border-r border-white/10 transition-colors"
+          aria-label="Call Siddharth Cement Sales"
+        >
+          <Phone className="w-5 h-5" />
+          <span className="font-mono text-xs font-bold uppercase tracking-wider">Call Now</span>
+        </a>
+        <a 
+          href={`https://wa.me/${WHATSAPP}?text=Hi%2C%20I%27m%20interested%20in%20direct%20CFA%20pricing%20for%20Bangur%20Cement.`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent('whatsapp_click', {location:'mobile_bar'})}
+          className="flex items-center justify-center gap-2 py-3.5 text-whatsapp hover:text-green-400 transition-colors"
+          aria-label="WhatsApp Siddharth Cement Sales"
+        >
+          <MessageCircle className="w-5 h-5 fill-current" />
+          <span className="font-mono text-xs font-bold uppercase tracking-wider">WhatsApp</span>
+        </a>
+      </div>
 
     </div>
   );
