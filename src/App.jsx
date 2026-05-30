@@ -708,9 +708,9 @@ function HeroScrollScrub() {
 
 // E: Scroll-Bound truck delivery route drawing flow
 function ScrollDeliveryTimeline() {
-  const containerRef = useRef(null);
-  const [progress, setProgress] = useState(0);
+  const [ref, isVisible] = useIntersectionObserver();
   const [prefersReduced, setPrefersReduced] = useState(false);
+  const [stepStates, setStepStates] = useState(['Pending', 'Pending', 'Pending', 'Pending']);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -718,24 +718,39 @@ function ScrollDeliveryTimeline() {
   }, []);
 
   useEffect(() => {
-    if (prefersReduced) return;
-    const handleScroll = () => {
-      const container = containerRef.current;
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      // Calculate active scroll progress inside delivery section bounds
-      const scrolled = viewportHeight - rect.top;
-      const totalScroll = rect.height + viewportHeight;
-      const pct = Math.min(Math.max(scrolled / totalScroll, 0), 1);
-      setProgress(pct);
-    };
+    if (!isVisible || prefersReduced) {
+      if (prefersReduced) {
+        setStepStates(['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', '✓ Dispatched']);
+      }
+      return;
+    }
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [prefersReduced]);
+    // Sequentially light up:
+    setStepStates(['In Transit...', 'Pending', 'Pending', 'Pending']);
+
+    const t1 = setTimeout(() => {
+      setStepStates(['✓ Dispatched', 'In Transit...', 'Pending', 'Pending']);
+    }, 800);
+
+    const t2 = setTimeout(() => {
+      setStepStates(['✓ Dispatched', '✓ Dispatched', 'In Transit...', 'Pending']);
+    }, 1600);
+
+    const t3 = setTimeout(() => {
+      setStepStates(['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', 'In Transit...']);
+    }, 2400);
+
+    const t4 = setTimeout(() => {
+      setStepStates(['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', '✓ Dispatched']);
+    }, 3200);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [isVisible, prefersReduced]);
 
   const stages = [
     { name: 'Factory Dispatch', icon: <Factory className="w-5 h-5" />, desc: 'Bags loaded directly from Shree Cement Ltd. units (Beawar/Ras, Rajasthan). Clinker-locked and fresh.' },
@@ -744,14 +759,23 @@ function ScrollDeliveryTimeline() {
     { name: 'Site Delivery', icon: <Truck className="w-5 h-5" />, desc: 'Fast, secure direct transit via SCS heavy fleet cargo trucks arriving within Guna district in 12-24 hours.' }
   ];
 
+  const activeStep = stepStates.reduce((acc, current, idx) => {
+    if (current !== 'Pending') return idx;
+    return acc;
+  }, 0);
+
   if (prefersReduced) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto pt-6 text-left">
         {stages.map((stage, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-none border-2 border-border-default shadow-sm">
-            <div className="w-10 h-10 rounded-none bg-brand-red text-white flex items-center justify-center mb-4">{stage.icon}</div>
+          <div key={idx} className="bg-white p-6 rounded-none border-2 border-brand-red shadow-sm relative flex flex-col items-center text-center space-y-4 group">
+            <span className="absolute top-3 left-3 text-[10px] font-mono text-text-muted font-bold select-none">0{idx + 1}</span>
+            <div className="absolute top-3 right-3 text-[9px] font-black px-2 py-0.5 rounded-xs uppercase tracking-wider font-mono bg-brand-red text-white">
+              ✓ Dispatched
+            </div>
+            <div className="w-12 h-12 rounded-none bg-brand-red text-white flex items-center justify-center border-2 border-brand-red mb-4">{stage.icon}</div>
             <h4 className="font-display font-bold uppercase text-text-primary text-base">{stage.name}</h4>
-            <p className="text-xs text-text-muted mt-2">{stage.desc}</p>
+            <p className="text-xs text-text-muted mt-2 leading-relaxed font-body">{stage.desc}</p>
           </div>
         ))}
       </div>
@@ -759,74 +783,122 @@ function ScrollDeliveryTimeline() {
   }
 
   return (
-    <div ref={containerRef} className="max-w-6xl mx-auto pt-10 pb-8 px-4 relative">
+    <div ref={ref} className="max-w-6xl mx-auto pt-4 pb-8 px-4 relative">
       
-      {/* Route Dotted Vector Line with technical hatch pattern */}
-      <div className="absolute top-[28px] left-[8%] right-[8%] h-[6px] bg-surface-dust hidden lg:block z-0 border border-border-default rounded-none">
-        <div 
-          className="h-full bg-brand-red transition-all duration-300 relative hatch-pattern"
-          style={{ width: `${progress * 100}%` }}
-        >
-          {/* Dynamic kinetic neon glowing tip */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-4 bg-brand-red shadow-[0_0_10px_#C8102E]" />
+      {/* 4. Overall Progress Readout */}
+      <Reveal className="max-w-md mx-auto mb-12 text-center space-y-3">
+        <div className="flex justify-between text-xs font-mono font-bold text-brand-red uppercase tracking-wider">
+          <span>Tracking System Active</span>
+          <span>Stage {activeStep + 1} of 4 — {stepStates[activeStep] === 'In Transit...' ? 'In Transit' : 'Dispatched'}</span>
         </div>
-      </div>
+        <div className="w-full h-2 bg-surface-dust border border-border-default overflow-hidden rounded-full">
+          <div 
+            className="h-full bg-gradient-to-r from-brand-red via-accent-yellow to-brand-red transition-all duration-700 ease-out"
+            style={{ width: `${((activeStep + 1) / 4) * 100}%` }}
+          />
+        </div>
+        <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest leading-none">
+          Guna district 12-24h structural supply pipeline
+        </p>
+      </Reveal>
 
-      {/* SVG Kinetic Cargo Cement Truck driving across as user scrolls with vibration shake */}
-      <div 
-        className="absolute top-[10px] hidden lg:block z-20 pointer-events-none transition-all duration-300 ease-out"
-        style={{ left: `${8 + progress * 84}%`, transform: 'translateX(-50%)' }}
-      >
-        <div className="flex flex-col items-center">
-          <div className="bg-brand-red text-white px-3 py-1.5 rounded-none shadow-md border border-white/20 flex items-center gap-1.5 relative select-none animate-[truckShake_0.2s_infinite]">
-            <Truck className="w-5 h-5 text-white" />
-            <span className="text-[9px] font-bold uppercase tracking-wider font-mono">BANGUR EXPRESS</span>
-            {/* Speed lines */}
-            <div className="absolute right-full top-1/2 -translate-y-1/2 flex items-center gap-0.5 mr-2 opacity-80">
-              <span className="h-[2px] w-4 bg-brand-red/80 rounded-none" />
-              <span className="h-[2px] w-2 bg-brand-red/60 rounded-none" />
-              <span className="h-[2px] w-1 bg-brand-red/40 rounded-none" />
-            </div>
-            {/* Dust particles */}
-            <div className="absolute left-[20%] top-full flex gap-1 mt-1 opacity-70">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-red/40 animate-ping delay-100" />
-              <span className="w-1 h-1 rounded-full bg-brand-red/20 animate-ping delay-200" />
+      <div className="relative">
+        {/* DESKTOP: Route Dotted Vector Line with technical hatch pattern */}
+        <div className="absolute top-[28px] left-[12.5%] right-[12.5%] h-[6px] bg-surface-dust hidden lg:block z-0 border border-border-default rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-brand-red transition-all duration-700 ease-out hatch-pattern"
+            style={{ width: `${(activeStep / 3) * 100}%` }}
+          >
+            {/* Dynamic kinetic neon glowing tip */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-4 bg-brand-red shadow-[0_0_10px_#C8102E]" />
+          </div>
+        </div>
+
+        {/* DESKTOP: SVG Kinetic Cargo Cement Truck driving across with vibration shake */}
+        <div 
+          className="absolute top-[10px] hidden lg:block z-20 pointer-events-none transition-all duration-[600ms] ease-out"
+          style={{ left: `${12.5 + (activeStep / 3) * 75}%`, transform: 'translateX(-50%)' }}
+        >
+          <div className="flex flex-col items-center">
+            <div className="bg-brand-red text-white px-3 py-1.5 rounded-xs shadow-md border border-white/20 flex items-center gap-1.5 relative select-none animate-[truckShake_0.2s_infinite]">
+              <Truck className="w-5 h-5 text-white" />
+              <span className="text-[9px] font-bold uppercase tracking-wider font-mono">BANGUR EXPRESS</span>
+              {/* Speed lines */}
+              <div className="absolute right-full top-1/2 -translate-y-1/2 flex items-center gap-0.5 mr-2 opacity-80">
+                <span className="h-[2px] w-4 bg-brand-red/80 rounded-none" />
+                <span className="h-[2px] w-2 bg-brand-red/60 rounded-none" />
+                <span className="h-[2px] w-1 bg-brand-red/40 rounded-none" />
+              </div>
+              {/* Dust particles */}
+              <div className="absolute left-[20%] top-full flex gap-1 mt-1 opacity-70">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-red/40 animate-ping delay-100" />
+                <span className="w-1 h-1 rounded-full bg-brand-red/20 animate-ping delay-200" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Responsive Node Stages */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-        {stages.map((stage, idx) => {
-          const isActive = progress >= (idx / (stages.length - 1)) - 0.05;
-          return (
-            <div 
-              key={idx}
-              className={`bg-white p-6 rounded-none border-2 transition-all duration-300 relative flex flex-col items-center text-center space-y-4 group hover:shadow-lift ${isActive ? 'border-brand-red shadow-md' : 'border-border-default shadow-sm'}`}
-            >
-              <div 
-                className={`w-12 h-12 rounded-none flex items-center justify-center border-2 transition-colors ${isActive ? 'bg-brand-red border-brand-red text-white shadow' : 'bg-surface-base border-border-default text-text-muted'}`}
-              >
-                {stage.icon}
-              </div>
-              <div>
-                <h4 className="font-display text-lg font-bold uppercase text-text-primary flex items-center justify-center gap-1">
-                  <span>{stage.name}</span>
-                  {isActive && <Check className="w-4 h-4 text-brand-red" />}
-                </h4>
-                <p className="text-xs text-text-muted mt-2 leading-relaxed font-body">
-                  {stage.desc}
-                </p>
-              </div>
-              <div className={`absolute top-2 right-2 text-[9px] font-black px-2 py-0.5 rounded-none uppercase tracking-wider font-mono ${isActive ? 'bg-brand-red text-white animate-pulse' : 'bg-surface-dust text-text-muted'}`}>
-                {isActive ? '✓ Dispatch' : 'Pending'}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+        {/* MOBILE: Vertical Connector Line down the left of stacked cards */}
+        <div className="absolute left-[44px] top-10 bottom-10 w-[4px] bg-surface-dust md:hidden z-0 rounded-full overflow-hidden">
+          <div 
+            className="w-full bg-brand-red transition-all duration-700 ease-out"
+            style={{ height: `${(activeStep / 3) * 100}%` }}
+          />
+        </div>
 
+        {/* MOBILE: Small truck icon traveling down the vertical connector to current stage */}
+        <div 
+          className="absolute left-[44px] -translate-x-1/2 transition-all duration-[600ms] ease-out z-20 md:hidden"
+          style={{ 
+            top: `calc(40px + ${(activeStep / 3)} * (100% - 80px))`,
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div className="bg-brand-red text-white p-1.5 rounded-full border border-white/20 shadow-md select-none animate-[truckShake_0.2s_infinite]">
+            <Truck className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* Responsive Node Stages */}
+        <div className="flex flex-col gap-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 relative z-10">
+          {stages.map((stage, idx) => {
+            const isDone = stepStates[idx] === '✓ Dispatched';
+            const isTransit = stepStates[idx] === 'In Transit...';
+            
+            return (
+              <Reveal key={idx} delay={idx * 150}>
+                <div 
+                  className={`bg-white p-5 rounded-none border-2 transition-all duration-500 relative flex flex-row items-start text-left gap-5 md:flex-col md:items-center md:text-center md:p-6 group premium-card hover:shadow-lift ${isDone || isTransit ? 'border-brand-red shadow-md -translate-y-1' : 'border-border-default shadow-sm'}`}
+                >
+                  {/* Step index badge */}
+                  <span className="absolute top-3 left-3 text-[10px] font-mono text-text-muted font-bold select-none">0{idx + 1}</span>
+
+                  {/* Node icon with spring zoom and pulsate */}
+                  <div 
+                    className={`w-12 h-12 rounded-none flex-shrink-0 flex items-center justify-center border-2 transition-all duration-500 transform ${isDone || isTransit ? 'bg-brand-red border-brand-red text-white scale-100 ring-4 ring-brand-red/10 animate-[badgePulse_1.5s_ease-out_infinite]' : 'bg-surface-base border-border-default text-text-muted scale-90'}`}
+                  >
+                    {stage.icon}
+                  </div>
+                  <div className="flex-grow space-y-1">
+                    <h4 className="font-display text-lg font-bold uppercase text-text-primary flex items-center justify-start md:justify-center gap-1.5 leading-none">
+                      <span>{stage.name}</span>
+                      {isDone && <Check className="w-4 h-4 text-brand-red" />}
+                    </h4>
+                    <p className="text-xs text-text-muted mt-2 leading-relaxed font-body">
+                      {stage.desc}
+                    </p>
+                  </div>
+
+                  {/* Status chip */}
+                  <div className={`absolute top-3 right-3 text-[9px] font-black px-2 py-0.5 rounded-xs uppercase tracking-wider font-mono transition-all duration-300 ${isDone ? 'bg-brand-red text-white' : isTransit ? 'bg-accent-yellow/20 text-brand-red border border-brand-red/30 animate-pulse' : 'bg-surface-dust text-text-muted'}`}>
+                    {stepStates[idx]}
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
