@@ -577,6 +577,41 @@ function StatCounter({ target, suffix = '', duration = 1800 }) {
   );
 }
 
+// Scroll-reveal wrapper: fades + slides children up when they enter the viewport.
+function Reveal({ children, className = '', delay = 0, as: Tag = 'div' }) {
+  const [ref, isVisible] = useIntersectionObserver();
+  return (
+    <Tag
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+// Inline count-up number
+function StatCounterInline({ target, suffix = '', duration = 1800 }) {
+  const [count, setCount] = useState(0);
+  const [ref, isVisible] = useIntersectionObserver();
+  useEffect(() => {
+    if (!isVisible) return;
+    const numericTarget = parseInt(String(target).replace(/[^0-9]/g, ''), 10) || 0;
+    if (numericTarget === 0) { setCount(0); return; }
+    const start = performance.now();
+    const animate = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = p * (2 - p);
+      setCount(Math.floor(eased * numericTarget));
+      if (p < 1) requestAnimationFrame(animate); else setCount(numericTarget);
+    };
+    requestAnimationFrame(animate);
+  }, [isVisible, target, duration]);
+  const shown = count >= 1000 ? count.toLocaleString('en-IN') : count;
+  return <span ref={ref}>{shown}{suffix}</span>;
+}
+
 // B: Autoplay Video Hero Background
 function HeroVideo() {
   const videoRef = useRef(null);
@@ -943,6 +978,14 @@ export default function App() {
     }
   ];
 
+  const legacyMilestones = [
+    { year: '1973', title: 'The First Sack', text: 'Siddharth Cement Sales opens as a small family cement shop in Guna — one storefront, one promise: honest material, fair price.' },
+    { year: '1985', title: 'Trust Spreads', text: 'Word of mouth turns the shop into the go-to name for contractors across Guna district. The handshake becomes the contract.' },
+    { year: '2001', title: 'CFA Accreditation', text: 'Becomes an authorized Carrying & Forwarding Agent — fresh clinker now arrives factory-direct from Shree Cement, zero middlemen.' },
+    { year: '2015', title: 'Fleet & Reach', text: 'A dedicated dispatch fleet delivers across central MP with rapid 12-hour logistics to site.' },
+    { year: 'Today', title: '15,000+ Homes Strong', text: 'Three generations of builders, one unbroken standard. Still factory-direct. Still sealed by quality.' },
+  ];
+
   // Story Deck automatic rotation cycle
   useEffect(() => {
     const timer = setInterval(() => {
@@ -1300,157 +1343,184 @@ export default function App() {
           </section>
 
           {/* S5: About Section with Stacked photo cards stack */}
-          <section id="about" className="py-20 md:py-28 bg-surface-base border-b border-border-default">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-              
-              {/* D: Stacked Card Deck component column (5 cols) */}
-              <div className="lg:col-span-5 flex flex-col items-center w-full">
-                <div className="relative w-[88vw] max-w-[270px] sm:max-w-[320px] h-[330px] sm:h-[380px] cursor-pointer group/deck" onClick={() => setStoryIndex(prev => (prev + 1) % storyDecks.length)}>
-                  {storyDecks.map((card, idx) => {
-                    const offset = (idx - storyIndex + storyDecks.length) % storyDecks.length;
-                    const isActive = offset === 0;
-                    return (
-                      <div
-                        key={idx}
-                        className={`absolute inset-0 bg-white border-2 rounded-lg overflow-hidden p-3 shadow-md hover:shadow-lift transition-all duration-500 ease-out select-none flex flex-col justify-between ${
-                          isActive ? 'border-brand-red shadow-lg ring-4 ring-brand-red/5' : 'border-border-default opacity-85'
-                        }`}
-                        style={{
-                          transform: `scale(${1 - offset * 0.05}) translate(${offset * 12}px, ${offset * 12}px) rotate(${offset * 0.8}deg)`,
-                          zIndex: storyDecks.length - offset,
-                          opacity: offset > 2 ? 0 : 1
-                        }}
-                      >
-                        <div className="w-full h-[65%] bg-surface-dust rounded-md overflow-hidden relative border border-border-default/50">
-                          <img 
-                            src={card.img} 
-                            alt={card.title} 
-                            className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover/deck:scale-103 ${
-                              isActive ? 'grayscale-0' : 'grayscale contrast-125 brightness-95'
-                            }`} 
-                            loading="lazy"
-                            decoding="async"
-                          />
-                          <span className="absolute top-3 left-3 bg-brand-red text-white text-[8px] font-mono font-black uppercase px-2.5 py-0.5 rounded-xs shadow-sm select-none">
-                            {card.badge}
-                          </span>
-                          <span className="absolute bottom-3 right-3 bg-surface-dark/85 backdrop-blur-sm text-white text-[8px] font-mono px-2 py-0.5 rounded-xs select-none">
-                            ESTD. 1973
-                          </span>
-                        </div>
-                        <div className="p-3 text-left space-y-1.5 flex-grow flex flex-col justify-between">
-                          <div>
-                            <h4 className={`font-display font-bold uppercase text-base leading-none mt-1 transition-colors duration-300 ${
-                              isActive ? 'text-brand-red' : 'text-text-primary'
-                            }`}>
-                              {card.title}
-                            </h4>
-                            <p className="text-[10px] text-text-muted leading-relaxed font-body mt-1.5 line-clamp-3">
-                              {card.desc}
-                            </p>
-                          </div>
-                          
-                          {/* Mini footer details inside the active card */}
-                          {isActive && (
-                            <div className="pt-2 border-t border-border-default/50 flex items-center justify-between text-[8px] font-mono text-brand-red uppercase font-semibold">
-                              <span>★ DIRECT DISPATCH COMPLIANT</span>
-                              <span>FRAME {String(idx + 1).padStart(2, '0')}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* S5: Legacy Story — animated, scroll-revealed brand narrative */}
+          <section id="about" className="relative py-20 md:py-28 bg-surface-base border-b border-border-default overflow-hidden">
+            {/* faint blueprint texture backdrop */}
+            <div className="absolute inset-0 blueprint-pattern opacity-60 pointer-events-none" />
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                {/* Progress Indicators & Technical Monospaced Counter */}
-                <div className="mt-8 flex flex-col items-center space-y-3">
-                  <div className="flex gap-2">
-                    {storyDecks.map((_, i) => (
-                      <span 
-                        key={i} 
-                        onClick={(e) => { e.stopPropagation(); setStoryIndex(i); }}
-                        className={`w-2.5 h-1.5 transition-colors cursor-pointer rounded-xs ${i === storyIndex ? 'bg-brand-red w-4' : 'bg-border-default'}`} 
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[11px] font-bold text-text-primary uppercase tracking-widest font-mono select-none">
-                    Story Frame {String(storyIndex + 1).padStart(2, '0')} / {String(storyDecks.length).padStart(2, '0')}
-                  </p>
-                </div>
-              </div>
- 
-              {/* Story Description (7 cols) */}
-              <div className="lg:col-span-7 space-y-6 text-left">
+              {/* Section heading */}
+              <Reveal className="max-w-3xl">
                 <div className="inline-flex items-center gap-2 text-brand-red font-bold uppercase tracking-wider text-xs font-mono">
                   <span className="w-6 h-[2px] bg-brand-red block animate-pulse" />
-                  <span>52-YEAR UNBREAKABLE GUNA LEGACY</span>
+                  <span>52-Year Unbreakable Guna Legacy</span>
                 </div>
-                <h2 className="font-display text-4xl sm:text-5xl font-black text-text-primary uppercase leading-tight tracking-tight">
-                  FROM 1973 TO TODAY — STILL BUILDING <span className="text-brand-red">TRUST.</span>
+                <h2 className="mt-4 font-display text-4xl sm:text-5xl md:text-6xl font-black text-text-primary uppercase leading-[0.95] tracking-tight">
+                  From 1973 to Today<br className="hidden sm:block" /> — Still Building <span className="text-brand-red relative inline-block">Trust.
+                    <span className="title-sweep absolute -bottom-1 left-0 w-full h-[4px] rounded-full" />
+                  </span>
                 </h2>
-                
-                {/* Active Card Story Context Sub-box */}
-                <div className="bg-white p-5 rounded-lg border-2 border-brand-red/10 shadow-sm relative overflow-hidden transition-all duration-500 hover:border-brand-red/35">
-                  <div className="absolute top-0 right-0 bg-brand-red/5 px-3 py-1 font-mono text-[9px] font-bold text-brand-red uppercase rounded-bl-lg select-none">
-                    Story Segment {String(storyIndex + 1).padStart(2, '0')}
-                  </div>
-                  <h4 className="font-display font-bold uppercase text-text-inverse text-lg tracking-tight select-none">
-                    {storyDecks[storyIndex].title}
-                  </h4>
-                  <p className="text-xs text-text-muted mt-2 leading-relaxed font-body">
-                    {storyDecks[storyIndex].desc}
-                  </p>
-                </div>
-
-                <p className="text-text-body text-sm font-body leading-relaxed">
-                  Siddharth Cement Sales began operations in 1973 under the family trade banner **"Siddarth Sales"** in Guna. Over five decades, we have dispatched premium structural concrete loads for central MP major developments, maintaining Accredited Shree Cement CFA factory-direct pricing guidelines with zero speculative markups.
+                <p className="mt-5 text-text-body text-sm sm:text-base font-body leading-relaxed">
+                  Siddharth Cement Sales began in 1973 as a single family-run cement shop in Guna, under the trade name <span className="font-semibold text-text-primary">"Siddarth Sales."</span> Over five decades we have dispatched premium structural concrete for central MP's biggest developments — always factory-direct, always at accredited Shree Cement CFA pricing, with zero speculative markups.
                 </p>
+              </Reveal>
 
-                {/* Guna Trust Pillars - Storytelling process */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border-default/85">
-                  <div className="space-y-2 group">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 bg-brand-red/10 text-brand-red rounded-full flex items-center justify-center text-[11px] font-mono font-bold select-none group-hover:bg-brand-red group-hover:text-white transition-all duration-300">★</span>
-                      <span className="text-xs font-mono font-bold text-text-primary uppercase tracking-tight">1. 52-Year CFA Legacy</span>
+              {/* Animated stat band */}
+              <Reveal delay={100}>
+                <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-px bg-border-default rounded-xl overflow-hidden border border-border-default shadow-sm">
+                  {[
+                    { n: '52', s: '+', label: 'Years of Trust' },
+                    { n: '15000', s: '+', label: 'Homes Built' },
+                    { n: '12', s: 'h', label: 'Dispatch to Site' },
+                    { n: '0', s: '%', label: 'Middleman Markup' },
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-surface-dark px-5 py-7 text-center flex flex-col items-center justify-center">
+                      <span className="font-display text-3xl md:text-5xl font-black tracking-tight text-white leading-none">
+                        <StatCounterInline target={stat.n} suffix={stat.s} />
+                      </span>
+                      <span className="mt-2 text-[10px] md:text-xs font-mono uppercase tracking-widest text-gray-400">{stat.label}</span>
                     </div>
-                    <p className="text-[10px] text-text-muted leading-relaxed font-body">
-                      Founded in 1973. Central MP structural dispatch pipeline with 15k+ happy individual builders.
-                    </p>
-                  </div>
-                  <div className="space-y-2 group">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 bg-brand-red/10 text-brand-red rounded-full flex items-center justify-center text-[11px] font-mono font-bold select-none group-hover:bg-brand-red group-hover:text-white transition-all duration-300">★</span>
-                      <span className="text-xs font-mono font-bold text-text-primary uppercase tracking-tight">2. Direct Dispatch</span>
-                    </div>
-                    <p className="text-[10px] text-text-muted leading-relaxed font-body">
-                      Fresh clinker loads direct from Shree Cement plants with absolute zero middleman markup.
-                    </p>
-                  </div>
-                  <div className="space-y-2 group">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 bg-brand-red/10 text-brand-red rounded-full flex items-center justify-center text-[11px] font-mono font-bold select-none group-hover:bg-brand-red group-hover:text-white transition-all duration-300">★</span>
-                      <span className="text-xs font-mono font-bold text-text-primary uppercase tracking-tight">3. Quality Check</span>
-                    </div>
-                    <p className="text-[10px] text-text-muted leading-relaxed font-body">
-                      Free structural cover scans, mobile labs, and slump cone tests at slab casting sites.
-                    </p>
+                  ))}
+                </div>
+              </Reveal>
+
+              {/* Two-column: timeline narrative + photo deck */}
+              <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-14 lg:gap-16 items-start">
+
+                {/* LEFT: vertical animated timeline (the story arc) */}
+                <div className="lg:col-span-7 order-2 lg:order-1">
+                  <Reveal>
+                    <h3 className="font-display text-xl font-black uppercase tracking-tight text-text-primary mb-8 flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center text-sm">★</span>
+                      The Journey
+                    </h3>
+                  </Reveal>
+                  <div className="relative pl-10">
+                    {/* vertical rail */}
+                    <div className="absolute left-[14px] top-2 bottom-2 w-[2px] bg-gradient-to-b from-brand-red via-brand-red/40 to-transparent" />
+                    {legacyMilestones.map((m, i) => (
+                      <Reveal key={i} delay={i * 90} className="relative pb-9 last:pb-0">
+                        {/* node */}
+                        <span className="absolute -left-10 top-0.5 w-[30px] h-[30px] rounded-full bg-surface-base border-2 border-brand-red flex items-center justify-center shadow-sm">
+                          <span className="w-2.5 h-2.5 rounded-full bg-brand-red animate-pulse" />
+                        </span>
+                        <div className="flex items-baseline gap-3 flex-wrap">
+                          <span className="font-display text-2xl font-black text-brand-red leading-none">{m.year}</span>
+                          <span className="font-display text-sm font-bold uppercase tracking-wide text-text-primary">{m.title}</span>
+                        </div>
+                        <p className="mt-2 text-sm text-text-muted font-body leading-relaxed max-w-xl">{m.text}</p>
+                      </Reveal>
+                    ))}
                   </div>
                 </div>
 
-                {/* Legacy Quote Badge */}
-                <div className="border-l-4 border-brand-red bg-surface-muted pl-6 py-4 rounded-r-lg shadow-sm flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-display text-sm font-black uppercase text-brand-red tracking-wider">
-                      ★ BUILT ON TRUST. SEALED BY QUALITY.
-                    </p>
-                    <p className="text-[10px] text-text-muted mt-1 uppercase font-mono">
-                      SIDDHARTH CEMENT SALES — GUNA'S PIONEER CEMENT SUPPLIER SINCE 1973
-                    </p>
-                  </div>
-                  <HardHat className="w-8 h-8 text-brand-red/20 shrink-0 select-none animate-pulse" />
+                {/* RIGHT: stacked photo deck (sticky on desktop) */}
+                <div className="lg:col-span-5 order-1 lg:order-2 lg:sticky lg:top-28">
+                  <Reveal className="flex flex-col items-center w-full">
+                    <div className="relative w-[88vw] max-w-[300px] sm:max-w-[340px] h-[360px] sm:h-[400px] cursor-pointer group/deck" onClick={() => setStoryIndex(prev => (prev + 1) % storyDecks.length)}>
+                      {storyDecks.map((card, idx) => {
+                        const offset = (idx - storyIndex + storyDecks.length) % storyDecks.length;
+                        const isActive = offset === 0;
+                        return (
+                          <div
+                            key={idx}
+                            className={`absolute inset-0 bg-white border-2 rounded-xl overflow-hidden p-3 shadow-md transition-all duration-500 ease-out select-none flex flex-col justify-between ${
+                              isActive ? 'border-brand-red shadow-lg ring-4 ring-brand-red/5' : 'border-border-default opacity-85'
+                            }`}
+                            style={{
+                              transform: `scale(${1 - offset * 0.05}) translate(${offset * 12}px, ${offset * 12}px) rotate(${offset * 0.8}deg)`,
+                              zIndex: storyDecks.length - offset,
+                              opacity: offset > 2 ? 0 : 1
+                            }}
+                          >
+                            <div className="w-full h-[66%] bg-surface-dust rounded-lg overflow-hidden relative border border-border-default/50">
+                              <img loading="lazy" decoding="async"
+                                src={card.img}
+                                alt={card.title}
+                                className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover/deck:scale-105 ${
+                                  isActive ? 'grayscale-0' : 'grayscale contrast-125 brightness-95'
+                                }`}
+                              />
+                              <span className="absolute top-3 left-3 bg-brand-red text-white text-[8px] font-mono font-black uppercase px-2.5 py-0.5 rounded-xs shadow-sm select-none">
+                                {card.badge}
+                              </span>
+                              <span className="absolute bottom-3 right-3 bg-surface-dark/85 backdrop-blur-sm text-white text-[8px] font-mono px-2 py-0.5 rounded-xs select-none">
+                                ESTD. 1973
+                              </span>
+                            </div>
+                            <div className="p-3 text-left space-y-1.5 flex-grow flex flex-col justify-between">
+                              <div>
+                                <h4 className={`font-display font-bold uppercase text-base leading-none mt-1 transition-colors duration-300 ${
+                                  isActive ? 'text-brand-red' : 'text-text-primary'
+                                }`}>
+                                  {card.title}
+                                </h4>
+                                <p className="text-[10px] text-text-muted leading-relaxed font-body mt-1.5 line-clamp-3">
+                                  {card.desc}
+                                </p>
+                              </div>
+                              {isActive && (
+                                <div className="pt-2 border-t border-border-default/50 flex items-center justify-between text-[8px] font-mono text-brand-red uppercase font-semibold">
+                                  <span>★ Direct Dispatch Compliant</span>
+                                  <span>Frame {String(idx + 1).padStart(2, '0')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-8 flex flex-col items-center space-y-3">
+                      <div className="flex gap-2">
+                        {storyDecks.map((_, i) => (
+                          <span
+                            key={i}
+                            onClick={(e) => { e.stopPropagation(); setStoryIndex(i); }}
+                            className={`h-1.5 transition-all cursor-pointer rounded-xs ${i === storyIndex ? 'bg-brand-red w-4' : 'bg-border-default w-2.5'}`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-[11px] font-bold text-text-primary uppercase tracking-widest font-mono select-none">
+                        Tap to explore · {String(storyIndex + 1).padStart(2, '0')} / {String(storyDecks.length).padStart(2, '0')}
+                      </p>
+                    </div>
+                  </Reveal>
                 </div>
               </div>
+
+              {/* Trust pillars */}
+              <Reveal className="mt-16">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 border-t border-border-default">
+                  {[
+                    { t: '52-Year CFA Legacy', d: 'Founded in 1973. Central MP structural dispatch pipeline with 15k+ happy individual builders.' },
+                    { t: 'Direct Dispatch', d: 'Fresh clinker loads direct from Shree Cement plants with absolute zero middleman markup.' },
+                    { t: 'Quality Check', d: 'Free structural cover scans, mobile labs, and slump cone tests at slab casting sites.' },
+                  ].map((p, i) => (
+                    <div key={i} className="premium-card bg-white border-2 border-border-default rounded-lg p-5 group">
+                      <div className="flex items-center gap-3">
+                        <span className="w-9 h-9 bg-brand-red/10 text-brand-red rounded-full flex items-center justify-center text-sm font-mono font-bold select-none group-hover:bg-brand-red group-hover:text-white transition-all duration-300">{i + 1}</span>
+                        <span className="font-display text-sm font-bold text-text-primary uppercase tracking-tight">{p.t}</span>
+                      </div>
+                      <p className="mt-3 text-xs text-text-muted leading-relaxed font-body">{p.d}</p>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+
+              {/* Closing trust seal */}
+              <Reveal delay={100} className="mt-10">
+                <div className="border-l-4 border-brand-red bg-surface-dark pl-6 pr-5 py-5 rounded-r-lg shadow-md flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-display text-base sm:text-lg font-black uppercase text-white tracking-wider">
+                      ★ Built on Trust. Sealed by Quality.
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1 uppercase font-mono tracking-wide">
+                      Siddharth Cement Sales — Guna's Pioneer Cement Supplier Since 1973
+                    </p>
+                  </div>
+                  <HardHat className="w-10 h-10 text-brand-red shrink-0 select-none animate-pulse" />
+                </div>
+              </Reveal>
 
             </div>
           </section>
