@@ -710,7 +710,7 @@ function HeroScrollScrub() {
 function ScrollDeliveryTimeline() {
   const [ref, isVisible] = useIntersectionObserver();
   const [prefersReduced, setPrefersReduced] = useState(false);
-  const [stepStates, setStepStates] = useState(['Pending', 'Pending', 'Pending', 'Pending']);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -718,39 +718,31 @@ function ScrollDeliveryTimeline() {
   }, []);
 
   useEffect(() => {
-    if (!isVisible || prefersReduced) {
-      if (prefersReduced) {
-        setStepStates(['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', '✓ Dispatched']);
-      }
-      return;
-    }
+    if (prefersReduced || !isVisible) return;
 
-    // Sequentially light up:
-    setStepStates(['In Transit...', 'Pending', 'Pending', 'Pending']);
+    const handleScroll = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const elementHeight = rect.height;
+      
+      const startPosition = windowHeight * 0.8;
+      const currentPosition = startPosition - rect.top;
+      
+      const denom = elementHeight || 1;
+      let pct = currentPosition / denom;
+      
+      pct = Math.min(1, Math.max(0, pct));
+      setScrollProgress(pct);
+    };
 
-    const t1 = setTimeout(() => {
-      setStepStates(['✓ Dispatched', 'In Transit...', 'Pending', 'Pending']);
-    }, 800);
-
-    const t2 = setTimeout(() => {
-      setStepStates(['✓ Dispatched', '✓ Dispatched', 'In Transit...', 'Pending']);
-    }, 1600);
-
-    const t3 = setTimeout(() => {
-      setStepStates(['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', 'In Transit...']);
-    }, 2400);
-
-    const t4 = setTimeout(() => {
-      setStepStates(['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', '✓ Dispatched']);
-    }, 3200);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [isVisible, prefersReduced]);
+  }, [prefersReduced, isVisible]);
 
   const stages = [
     { name: 'Factory Dispatch', icon: <Factory className="w-5 h-5" />, desc: 'Bags loaded directly from Shree Cement Ltd. units (Beawar/Ras, Rajasthan). Clinker-locked and fresh.' },
@@ -759,10 +751,18 @@ function ScrollDeliveryTimeline() {
     { name: 'Site Delivery', icon: <Truck className="w-5 h-5" />, desc: 'Fast, secure direct transit via SCS heavy fleet cargo trucks arriving within Guna district in 12-24 hours.' }
   ];
 
-  const activeStep = stepStates.reduce((acc, current, idx) => {
-    if (current !== 'Pending') return idx;
-    return acc;
-  }, 0);
+  const stepStates = prefersReduced
+    ? ['✓ Dispatched', '✓ Dispatched', '✓ Dispatched', '✓ Dispatched']
+    : [
+        scrollProgress >= 0.2 ? '✓ Dispatched' : 'In Transit...',
+        scrollProgress >= 0.45 ? '✓ Dispatched' : (scrollProgress >= 0.2 ? 'In Transit...' : 'Pending'),
+        scrollProgress >= 0.7 ? '✓ Dispatched' : (scrollProgress >= 0.45 ? 'In Transit...' : 'Pending'),
+        scrollProgress >= 0.9 ? '✓ Dispatched' : (scrollProgress >= 0.7 ? 'In Transit...' : 'Pending')
+      ];
+
+  const activeStep = prefersReduced
+    ? 3
+    : Math.min(3, Math.max(0, Math.floor(scrollProgress * 4)));
 
   if (prefersReduced) {
     return (
@@ -793,8 +793,8 @@ function ScrollDeliveryTimeline() {
         </div>
         <div className="w-full h-2 bg-surface-dust border border-border-default overflow-hidden rounded-full">
           <div 
-            className="h-full bg-gradient-to-r from-brand-red via-accent-yellow to-brand-red transition-all duration-700 ease-out"
-            style={{ width: `${((activeStep + 1) / 4) * 100}%` }}
+            className="h-full bg-gradient-to-r from-brand-red via-accent-yellow to-brand-red transition-all duration-300 ease-out"
+            style={{ width: `${scrollProgress * 100}%` }}
           />
         </div>
         <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest leading-none">
@@ -806,8 +806,8 @@ function ScrollDeliveryTimeline() {
         {/* DESKTOP: Route Dotted Vector Line with technical hatch pattern */}
         <div className="absolute top-[28px] left-[12.5%] right-[12.5%] h-[6px] bg-surface-dust hidden lg:block z-0 border border-border-default rounded-full overflow-hidden">
           <div 
-            className="h-full bg-brand-red transition-all duration-700 ease-out hatch-pattern"
-            style={{ width: `${(activeStep / 3) * 100}%` }}
+            className="h-full bg-brand-red transition-all duration-300 ease-out hatch-pattern"
+            style={{ width: `${scrollProgress * 100}%` }}
           >
             {/* Dynamic kinetic neon glowing tip */}
             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-4 bg-brand-red shadow-[0_0_10px_#C8102E]" />
@@ -816,8 +816,8 @@ function ScrollDeliveryTimeline() {
 
         {/* DESKTOP: SVG Kinetic Cargo Cement Truck driving across with vibration shake */}
         <div 
-          className="absolute top-[10px] hidden lg:block z-20 pointer-events-none transition-all duration-[600ms] ease-out"
-          style={{ left: `${12.5 + (activeStep / 3) * 75}%`, transform: 'translateX(-50%)' }}
+          className="absolute top-[10px] hidden lg:block z-20 pointer-events-none transition-all duration-300 ease-out"
+          style={{ left: `${12.5 + scrollProgress * 75}%`, transform: 'translateX(-50%)' }}
         >
           <div className="flex flex-col items-center">
             <div className="bg-brand-red text-white px-3 py-1.5 rounded-xs shadow-md border border-white/20 flex items-center gap-1.5 relative select-none animate-[truckShake_0.2s_infinite]">
@@ -838,20 +838,19 @@ function ScrollDeliveryTimeline() {
           </div>
         </div>
 
-        {/* MOBILE: Vertical Connector Line down the left of stacked cards */}
-        <div className="absolute left-[44px] top-10 bottom-10 w-[4px] bg-surface-dust md:hidden z-0 rounded-full overflow-hidden">
+        {/* MOBILE: Vertical Connector Line down the left gutter margin */}
+        <div className="absolute left-[20px] top-4 bottom-4 w-[4px] bg-surface-dust md:hidden z-0 rounded-full overflow-hidden">
           <div 
-            className="w-full bg-brand-red transition-all duration-700 ease-out"
-            style={{ height: `${(activeStep / 3) * 100}%` }}
+            className="w-full bg-brand-red transition-all duration-300 ease-out"
+            style={{ height: `${scrollProgress * 100}%` }}
           />
         </div>
 
-        {/* MOBILE: Small truck icon traveling down the vertical connector to current stage */}
+        {/* MOBILE: Small truck icon traveling down the vertical rail in the left gutter */}
         <div 
-          className="absolute left-[44px] -translate-x-1/2 transition-all duration-[600ms] ease-out z-20 md:hidden"
+          className="absolute left-[20px] -translate-x-1/2 transition-all duration-300 ease-out z-20 md:hidden"
           style={{ 
-            top: `calc(40px + ${(activeStep / 3)} * (100% - 80px))`,
-            transform: 'translateX(-50%)'
+            top: `calc(16px + ${scrollProgress} * (100% - 32px))`,
           }}
         >
           <div className="bg-brand-red text-white p-1.5 rounded-full border border-white/20 shadow-md select-none animate-[truckShake_0.2s_infinite]">
@@ -859,8 +858,8 @@ function ScrollDeliveryTimeline() {
           </div>
         </div>
 
-        {/* Responsive Node Stages */}
-        <div className="flex flex-col gap-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 relative z-10">
+        {/* Responsive Node Stages - Offset on mobile to leave a beautiful gutter for the rail */}
+        <div className="flex flex-col gap-6 pl-10 md:pl-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 relative z-10">
           {stages.map((stage, idx) => {
             const isDone = stepStates[idx] === '✓ Dispatched';
             const isTransit = stepStates[idx] === 'In Transit...';
@@ -871,11 +870,11 @@ function ScrollDeliveryTimeline() {
                   className={`bg-white p-5 rounded-none border-2 transition-all duration-500 relative flex flex-row items-start text-left gap-5 md:flex-col md:items-center md:text-center md:p-6 group premium-card hover:shadow-lift ${isDone || isTransit ? 'border-brand-red shadow-md -translate-y-1' : 'border-border-default shadow-sm'}`}
                 >
                   {/* Step index badge */}
-                  <span className="absolute top-3 left-3 text-[10px] font-mono text-text-muted font-bold select-none">0{idx + 1}</span>
+                  <span className="absolute top-2 left-3 text-[10px] font-mono text-text-muted font-bold select-none">0{idx + 1}</span>
 
                   {/* Node icon with spring zoom and pulsate */}
                   <div 
-                    className={`w-12 h-12 rounded-none flex-shrink-0 flex items-center justify-center border-2 transition-all duration-500 transform ${isDone || isTransit ? 'bg-brand-red border-brand-red text-white scale-100 ring-4 ring-brand-red/10 animate-[badgePulse_1.5s_ease-out_infinite]' : 'bg-surface-base border-border-default text-text-muted scale-90'}`}
+                    className={`w-12 h-12 rounded-none flex-shrink-0 flex items-center justify-center border-2 transition-all duration-500 transform mt-1 md:mt-0 ${isDone || isTransit ? 'bg-brand-red border-brand-red text-white scale-100 ring-4 ring-brand-red/10 animate-[badgePulse_1.5s_ease-out_infinite]' : 'bg-surface-base border-border-default text-text-muted scale-90'}`}
                   >
                     {stage.icon}
                   </div>
