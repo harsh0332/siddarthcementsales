@@ -1008,6 +1008,22 @@ export default function App() {
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200&h=200'
     },
     {
+      name: 'Roshan Chouksey',
+      role: 'Authorised Distributor',
+      location: 'Binaganj',
+      project: 'Harsh Traders (Binaganj Distribution Hub)',
+      quote: 'Siddharth Cement Sales ke saath judkar hum Harsh Traders ke roop mein Binaganj region mein Bangur Cement supply karte hain. Unka quick logistics aur constant stock support humare business ko bohot aage badhata hai.',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200&h=200'
+    },
+    {
+      name: 'Er. Alok Raghuvanshi',
+      role: 'Structural Consultant & Civil Engineer',
+      location: 'Raghogarh',
+      project: 'Raghogarh Residential Colony (4,200 Bags)',
+      quote: 'Siddharth Cement Sales ki site-testing aur technical support services lajawab hain. Concrete cube testing van ki suvidha aur construction guidelines se home builders ko behtareen quality milti hai.',
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200&h=200'
+    },
+    {
       name: 'Mukesh Jain',
       role: 'Authorized Sub-Dealer',
       location: 'Ashoknagar',
