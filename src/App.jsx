@@ -577,250 +577,98 @@ function StatCounter({ target, suffix = '', duration = 1800 }) {
   );
 }
 
-// B: Apple-style Scroll-scrubbed Hero Frame Animation Component
-function HeroScrollScrub() {
-  const canvasRef = useRef(null);
-  const parentRef = useRef(null);
-  const imagesRef = useRef([]);
-  const [isDesktop, setIsDesktop] = useState(null);
-  const [canvasReady, setCanvasReady] = useState(false);
-  const frameCount = 120;
+// B: Autoplay Video Hero Background
+function HeroVideo() {
+  const videoRef = useRef(null);
+  const [canPlay, setCanPlay] = useState(false);
 
   useEffect(() => {
-    const mobileMq = window.matchMedia('(max-width: 767px)');
-    const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    
-    const checkViewport = () => {
-      const isMobile = mobileMq.matches;
-      const prefersReduced = motionMq.matches;
-      setIsDesktop(!isMobile && !prefersReduced);
+    const v = videoRef.current;
+    if (!v) return;
+    // Respect data-saver / reduced-motion: keep the poster, skip autoplay video.
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const saveData = navigator.connection && navigator.connection.saveData;
+    if (reduce || saveData) return;
+    // Attach sources only after mount so the poster paints first (faster LCP).
+    const sources = [
+      { src: '/hero.mp4', type: 'video/mp4' },
+      { src: '/hero.webm', type: 'video/webm' },
+    ];
+    sources.forEach(({ src, type }) => {
+      const el = document.createElement('source');
+      el.src = src; el.type = type;
+      v.appendChild(el);
+    });
+    v.load();
+    const onReady = () => {
+      setCanPlay(true);
+      v.play().catch(() => {});
     };
-
-    checkViewport();
-    
-    mobileMq.addEventListener('change', checkViewport);
-    motionMq.addEventListener('change', checkViewport);
-    return () => {
-      mobileMq.removeEventListener('change', checkViewport);
-      motionMq.removeEventListener('change', checkViewport);
-    };
+    v.addEventListener('canplay', onReady, { once: true });
+    return () => v.removeEventListener('canplay', onReady);
   }, []);
 
-  useEffect(() => {
-    if (isDesktop === false || isDesktop === null) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    const drawFrame = (index) => {
-      const img = imagesRef.current[index];
-      if (!img) return;
-
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      const imgRatio = img.width / img.height;
-      const canvasRatio = canvas.width / canvas.height;
-      let drawWidth, drawHeight, drawX, drawY;
-
-      if (imgRatio > canvasRatio) {
-        drawHeight = canvas.height;
-        drawWidth = canvas.height * imgRatio;
-        drawX = (canvas.width - drawWidth) / 2;
-        drawY = 0;
-      } else {
-        drawWidth = canvas.width;
-        drawHeight = canvas.width / imgRatio;
-        drawX = 0;
-        drawY = (canvas.height - drawHeight) / 2;
-      }
-      context.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-    };
-
-    const handleResize = () => {
-      const scrollParent = parentRef.current;
-      if (!canvas || !scrollParent) return;
-      const stickyParent = canvas.parentElement;
-      if (!stickyParent) return;
-
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = stickyParent.clientWidth * ratio;
-      canvas.height = stickyParent.clientHeight * ratio;
-      
-      // Redraw current frame on resize
-      const rect = scrollParent.getBoundingClientRect();
-      const scrollHeight = rect.height - window.innerHeight;
-      const scrolled = -rect.top;
-      const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
-      const frameIndex = Math.min(
-        frameCount - 1,
-        Math.floor(progress * (frameCount - 1)) + 1
-      );
-      drawFrame(frameIndex);
-    };
-
-    let animationFrameId = null;
-
-    const handleScroll = () => {
-      const parent = parentRef.current;
-      if (!parent || !canvas) return;
-
-      const rect = parent.getBoundingClientRect();
-      const scrollHeight = rect.height - window.innerHeight;
-      const scrolled = -rect.top;
-      const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
-      
-      const frameIndex = Math.min(
-        frameCount - 1,
-        Math.floor(progress * (frameCount - 1)) + 1
-      );
-
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-
-      animationFrameId = requestAnimationFrame(() => {
-        drawFrame(frameIndex);
-      });
-    };
-
-    // Preload
-    const loadedImages = [];
-    setCanvasReady(false);
-
-    const img1 = new Image();
-    img1.src = `/ezgif/ezgif-frame-001.jpg`;
-    img1.onload = () => {
-      loadedImages[1] = img1;
-      imagesRef.current[1] = img1;
-      setCanvasReady(true);
-      
-      handleResize(); // Initialize size and draw frame 1
-      
-      // Preload remaining frames
-      for (let i = 2; i <= frameCount; i++) {
-        const img = new Image();
-        const frameStr = String(i).padStart(3, '0');
-        img.src = `/ezgif/ezgif-frame-${frameStr}.jpg`;
-        img.onload = () => {
-          loadedImages[i] = img;
-          imagesRef.current[i] = img;
-          
-          // If this is currently the active frame, redraw it
-          const rect = parentRef.current?.getBoundingClientRect();
-          if (rect) {
-            const scrollHeight = rect.height - window.innerHeight;
-            const scrolled = -rect.top;
-            const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
-            const currentFrameIndex = Math.min(
-              frameCount - 1,
-              Math.floor(progress * (frameCount - 1)) + 1
-            );
-            if (currentFrameIndex === i) {
-              drawFrame(i);
-            }
-          }
-        };
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [isDesktop]);
-
-  // Loading state placeholder before media query mount
-  if (isDesktop === null) {
-    return (
-      <div className="relative w-full h-[68vh] min-h-[420px] max-h-[640px] bg-surface-dark overflow-hidden border-b border-border-default flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Mobile Branch Slideshow
-  if (isDesktop === false) {
-    return (
-      <div className="relative w-full h-[68vh] min-h-[420px] max-h-[640px] bg-surface-dark overflow-hidden border-b border-border-default">
-        {/* Slideshow Accent Line */}
-        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-brand-red via-accent-yellow to-brand-red z-30" />
-        
-        {/* 3 stacked slides */}
-        <img 
-          src={IMAGES.modernMaterialsShop} 
-          alt="Modern storefront bags" 
-          className="hero-slide absolute inset-0 w-full h-full object-cover opacity-100" 
-          style={{ animationDelay: '0s' }}
-          fetchPriority="high"
-        />
-        <img 
-          src={IMAGES.cementWarehouse} 
-          alt="Cement warehouse" 
-          className="hero-slide absolute inset-0 w-full h-full object-cover opacity-0" 
-          style={{ animationDelay: '-6s' }}
-          loading="lazy"
-          decoding="async"
-        />
-        <img 
-          src={IMAGES.oldStorefrontBags} 
-          alt="Old storefront bags stack" 
-          className="hero-slide absolute inset-0 w-full h-full object-cover opacity-0" 
-          style={{ animationDelay: '-12s' }}
-          loading="lazy"
-          decoding="async"
-        />
-
-        {/* Overlay content */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/40 z-20 flex flex-col justify-center items-center text-center p-6 select-none">
-          <div className="space-y-6 max-w-xl">
-            {/* Pulsing accreditation stamp */}
-            <div className="inline-flex items-center gap-2 text-brand-red font-mono font-bold uppercase tracking-widest text-[9px] sm:text-xs bg-black/40 backdrop-blur-xs px-3.5 py-1.5 border border-brand-red/30 shadow-md rounded-xs animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-brand-red animate-ping" />
-              <span>Authorized Bangur CFA · Guna</span>
-            </div>
-
-            {/* Overlaid Headline */}
-            <h2 className="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight leading-tight">
-              Building Solid Foundations <span className="block text-brand-red">Since 1973</span>
-            </h2>
-          </div>
-        </div>
-
-        <style>{`
-          @keyframes heroCrossFade {
-            0%, 25% { opacity: 1; z-index: 10; }
-            33.33%, 91.67% { opacity: 0; z-index: 0; }
-            100% { opacity: 1; z-index: 10; }
-          }
-          .hero-slide {
-            animation: heroCrossFade 18s infinite;
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  // Desktop Branch Canvas Scroll scrub
   return (
-    <div ref={parentRef} className="relative w-full h-[220vh] bg-surface-dark z-10 border-b border-border-default">
-      {/* 16:9 Sticky Container pinning screen */}
-      <div className="sticky top-20 h-[calc(100vh-80px)] w-full overflow-hidden flex items-center justify-center">
-        {!canvasReady && (
-          <div className="absolute inset-0 bg-[#121212] flex items-center justify-center z-30">
-            <div className="w-8 h-8 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-        <canvas ref={canvasRef} className="w-full h-full block object-cover" />
+    <div className="relative w-full bg-surface-dark overflow-hidden border-b border-border-default z-10">
+      {/*
+        MOBILE: video keeps its natural 16:9 ratio so the whole frame is visible (no crop),
+                with the headline placed BELOW the video. DESKTOP: video covers a tall hero.
+      */}
+      <div className="relative w-full aspect-video md:aspect-auto md:h-[78vh] md:max-h-[760px] bg-black">
+        <video
+          ref={videoRef}
+          className={`absolute inset-0 w-full h-full object-contain md:object-cover transition-opacity duration-700 ${canPlay ? 'opacity-100' : 'opacity-0'}`}
+          poster="/hero-poster.webp"
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-hidden="true"
+        />
+        {/* Poster fallback layer (shows instantly + when video is suppressed) */}
+        <img
+          src="/hero-poster.webp"
+          alt="Bangur Magna cement — premium concrete by Siddharth Cement Sales"
+          fetchPriority="high"
+          decoding="async"
+          className={`absolute inset-0 w-full h-full object-contain md:object-cover transition-opacity duration-700 ${canPlay ? 'opacity-0' : 'opacity-100'}`}
+        />
+
+        {/* Top brand accent + desktop legibility overlay (kept off the mobile letterbox) */}
+        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-brand-red via-accent-yellow to-brand-red z-10" />
+        <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/45 pointer-events-none" />
+
+        {/* DESKTOP copy — overlaid on the covering video */}
+        <div className="hidden md:block absolute inset-x-0 bottom-0 p-14">
+          <span className="badge-pulse inline-flex items-center gap-2 text-white/95 font-mono font-bold uppercase tracking-widest text-xs bg-brand-red/80 px-3 py-1.5 rounded-xs">
+            <span className="w-2 h-2 rounded-full bg-accent-yellow animate-pulse" />
+            Authorized Bangur CFA · Guna
+          </span>
+          <h2 className="hero-rise hero-rise-2 mt-3 font-display text-white text-6xl lg:text-7xl font-black uppercase tracking-tight leading-none drop-shadow-lg">
+            Building Solid<br />Foundations
+            <span className="block mt-2 text-accent-yellow text-base font-mono tracking-widest">SINCE 1973</span>
+          </h2>
+        </div>
+      </div>
+
+      {/* MOBILE copy — placed BELOW the full-visible video, on a dark band */}
+      <div className="md:hidden bg-surface-dark px-6 py-6">
+        <span className="badge-pulse inline-flex items-center gap-2 text-white/95 font-mono font-bold uppercase tracking-widest text-[10px] bg-brand-red/80 px-3 py-1.5 rounded-xs">
+          <span className="w-2 h-2 rounded-full bg-accent-yellow animate-pulse" />
+          Authorized Bangur CFA · Guna
+        </span>
+        <h2 className="mt-3 font-display text-white text-3xl min-[420px]:text-4xl font-black uppercase tracking-tight leading-none">
+          Building Solid Foundations
+          <span className="block mt-2 text-accent-yellow text-sm font-mono tracking-widest">SINCE 1973</span>
+        </h2>
       </div>
     </div>
   );
+}
+
+// Thin wrapper so the existing call site keeps working.
+function HeroScrollScrub() {
+  return <HeroVideo />;
 }
 
 // E: Scroll-Bound truck delivery route drawing flow

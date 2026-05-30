@@ -25,3 +25,6 @@ dist-ssr
 
 # Auto-sync script
 auto-sync.sh
+
+# Heavy raw video source
+video.mp4
