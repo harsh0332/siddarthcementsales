@@ -638,14 +638,17 @@ function HeroScrollScrub() {
     };
 
     const handleResize = () => {
-      const parent = parentRef.current;
-      if (!parent || !canvas) return;
+      const scrollParent = parentRef.current;
+      if (!canvas || !scrollParent) return;
+      const stickyParent = canvas.parentElement;
+      if (!stickyParent) return;
+
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = parent.clientWidth * ratio;
-      canvas.height = parent.clientHeight * ratio;
+      canvas.width = stickyParent.clientWidth * ratio;
+      canvas.height = stickyParent.clientHeight * ratio;
       
       // Redraw current frame on resize
-      const rect = parent.getBoundingClientRect();
+      const rect = scrollParent.getBoundingClientRect();
       const scrollHeight = rect.height - window.innerHeight;
       const scrolled = -rect.top;
       const progress = Math.min(Math.max(scrolled / scrollHeight, 0), 1);
